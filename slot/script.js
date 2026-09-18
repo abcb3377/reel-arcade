@@ -40,7 +40,7 @@ let score = 0;
 let combo = 0;
 let coin = 1000;
 let spinning = false;
-let stopped = [false, false, false, false, false];
+let stopped = [false, false, false];
 
 function randomSymbol() {
     const random = Math.random() * 100;
@@ -224,7 +224,7 @@ function checkResult() {
     if (gainedScore > 0) {
         coin += gainedScore;
         coinDisplay.textContent = coin;
-        
+
         combo++;
         comboDisplay.textContent = combo;
 
