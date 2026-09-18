@@ -556,3 +556,62 @@ h1 {
     color: white;
     text-shadow: 0 0 10px white;
 }
+
+.extra-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.extra-buttons button {
+    min-width: 100px;
+    height: 45px;
+    border: 2px solid #555;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #444, #1b1b1b);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #111;
+    transition: 0.1s;
+}
+
+.extra-buttons button:hover {
+    filter: brightness(1.3);
+}
+
+.extra-buttons button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #111;
+}
+
+.extra-buttons button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.info-panel {
+    display: none;
+    margin: 20px auto 0;
+    padding: 20px;
+    width: 300px;
+    background: #111;
+    border: 2px solid #555;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.info-panel.show {
+    display: block;
+}
+
+.info-panel h2 {
+    margin-top: 0;
+}
+
+.info-panel p {
+    margin: 8px 0;
+    font-size: 18px;
+}
