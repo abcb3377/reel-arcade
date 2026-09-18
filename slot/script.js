@@ -420,8 +420,17 @@ document.querySelectorAll(".stop-button").forEach(button => {
 });
 
 betDisplay.addEventListener("click", () => {
-    const bets = [10, 20, 30, 40, 50];
-    const index = bets.indexOf(bet);
-    bet = bets[(index + 1) & bets.length];
+    if (bet === 10) {
+        bet = 20;
+    } else if (bet === 20) {
+        bet = 30;
+    } else if (bet === 30) {
+        bet = 40;
+    } else if (bet === 40) {
+        bet = 50;
+    } else {
+        bet = 10;
+    }
+
     betValue.textContent = bet;
 });
