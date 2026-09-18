@@ -615,3 +615,16 @@ h1 {
     margin: 8px 0;
     font-size: 18px;
 }
+
+.bet {
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.bet:hover {
+    filter: brightness(1.3);
+}
+
+.bet:active {
+    transform: scale(0.95);
+}

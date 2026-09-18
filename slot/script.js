@@ -1,3 +1,6 @@
+const betDisplay = document.getElementById("betDisplay");
+const betValue = document.getElementById("bet");
+
 const audioContext = new AudioContext();
 
 function playSound(frequency, duration) {
@@ -42,6 +45,7 @@ const resetButton = document.getElementById("resetButton");
 const infoButton = document.getElementById("infoButton");
 const infoPanel = document.getElementById("infoPanel");
 
+let bet = 10;
 let score = 0;
 let combo = 0;
 let coin = 1000;
@@ -117,7 +121,7 @@ function spin() {
         return;
     }
 
-    coin -= 10;
+    coin -= bet;
     coinDisplay.textContent = coin;
 
     audioContext.resume();
@@ -413,4 +417,11 @@ document.querySelectorAll(".stop-button").forEach(button => {
         const index = Number(button.dataset.index);
         stopReel(index);
     });
+});
+
+betDisplay.addEventListener("click", () => {
+    const bets = [10, 20, 30, 40, 50];
+    const index = bets.indexOf(bet);
+    bet = bets[(index + 1) & bets.length];
+    betValue.textContent = bet;
 });
