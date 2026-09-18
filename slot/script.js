@@ -36,10 +36,17 @@ const message = document.getElementById("message");
 const spinButton = document.getElementById("spinButton");
 const comboPopup = document.getElementById("comboPopup");
 
+const startButton = document.getElementById("startButton");
+const autoButton = document.getElementById("autoButton");
+const resetButton = document.getElementById("resetButton");
+const infoButton = document.getElementById("infoButton");
+const infoPanel = document.getElementById("infoPanel");
+
 let score = 0;
 let combo = 0;
 let coin = 1000;
 let spinning = false;
+let gameStarted = false;
 let stopped = [false, false, false];
 
 function randomSymbol() {
@@ -103,7 +110,7 @@ function spinReel(reel, index) {
 }
 
 function spin() {
-    if (spinning) return;
+    if (!gameStarted || spinning) return;
 
     if (coin < 10) {
         message.textContent = "COINが足りません！";
@@ -118,6 +125,7 @@ function spin() {
 
     spinning = true;
     spinButton.disabled = true;
+    autoButton.disabled = false;
 
     document.querySelectorAll(".symbol").forEach(symbol => {
         symbol.classList.remove("win");
@@ -127,11 +135,75 @@ function spin() {
 
     stopped = [false, false, false];
 
+    document.querySelectorAll(".stop-button").forEach(button => {
+        button.disabled = false;
+    });
+
     const reelElements = document.querySelectorAll(".reel");
 
     reelElements.forEach((reel, index) => {
         spinReel(reel, index);
     });
+}
+
+function stopReel(index) {
+    if (!spinning || stopped[index]) return;
+
+    stopped[index] = true;
+
+    const button = document.querySelector(
+        `.stop-button[data-index="${index}"]`
+    );
+
+    if (button) {
+        button.disabled = true;
+    }
+
+    const reel = document.querySelectorAll(".reel")[index];
+
+    reel.classList.add("stop");
+    reel.classList.add("stopped");
+
+    playSound(300 + index * 80, 0.1);
+
+    setTimeout(() => {
+        reel.classList.remove("stop");
+        reel.classList.remove("stopped");
+    }, 350);
+
+    if (stopped.every(value => value)) {
+        finishSpin();
+    }
+}
+
+function finishSpin() {
+    checkResult();
+
+    spinning = false;
+    spinButton.disabled = false;
+    autoButton.disabled = true;
+
+    document.querySelectorAll(".stop-button").forEach(button => {
+        button.disabled = false;
+    });
+}
+
+function autoStop() {
+    if (!gameStarted || !spinning) return;
+
+    autoButton.disabled = true;
+
+    setTimeout(() => {
+        if (spinning) stopReel(0);
+    }, 600);
+
+    setTimeout(() => {
+        if (spinning) stopReel(1);
+    }, 1200);
+
+    setTimeout(() => {
+        if (spinning) stopReel(2);
+    }, 1800);
 }
 
 function successEffect() {
@@ -171,11 +243,11 @@ function successEffect() {
 
 function checkResult() {
     const scoreValues = {
-    "🍒": 100,
-    "🍀": 150,
-    "⭐": 200,
-    "🔥": 300,
-    "💎": 500
+        "🍒": 100,
+        "🍀": 150,
+        "⭐": 200,
+        "🔥": 300,
+        "💎": 500
     };
 
     const reelElements = document.querySelectorAll(".reel");
@@ -196,7 +268,6 @@ function checkResult() {
         [[0, 0], [1, 0], [2, 0]],
         [[0, 1], [1, 1], [2, 1]],
         [[0, 2], [1, 2], [2, 2]],
-
         [[0, 0], [1, 1], [2, 2]],
         [[2, 0], [1, 1], [0, 2]]
     ];
@@ -230,30 +301,34 @@ function checkResult() {
 
         comboPopup.textContent = `COMBO ×${combo}`;
 
-        comboPopup.classList.remove("show", "combo-2", "combo-3", "combo-5");
+        comboPopup.classList.remove(
+            "show",
+            "combo-2",
+            "combo-3",
+            "combo-5"
+        );
 
         if (combo >= 5) {
-        comboPopup.classList.add("combo-5");
+            comboPopup.classList.add("combo-5");
 
-        const game = document.querySelector(".game");
-        game.classList.remove("combo-shake");
-        void game.offsetWidth;
-        game.classList.add("combo-shake");
+            const game = document.querySelector(".game");
+            game.classList.remove("combo-shake");
+            void game.offsetWidth;
+            game.classList.add("combo-shake");
         } else if (combo >= 3) {
-        comboPopup.classList.add("combo-3");
+            comboPopup.classList.add("combo-3");
         } else if (combo >= 2) {
-        comboPopup.classList.add("combo-2");
+            comboPopup.classList.add("combo-2");
         }
 
         void comboPopup.offsetWidth;
         comboPopup.classList.add("show");
 
-        const comboScore = gainedScore * combo;
-
         score += gainedScore;
         scoreDisplay.textContent = score;
 
-        message.textContent = `成功！ +${gainedScore} SCORE  COMBO ×${combo}`;
+        message.textContent =
+            `成功！ +${gainedScore} SCORE  COMBO ×${combo}`;
 
         successEffect();
 
@@ -273,40 +348,69 @@ function checkResult() {
     }
 }
 
+function startGame() {
+    if (gameStarted) return;
+
+    gameStarted = true;
+    spinButton.disabled = false;
+    startButton.disabled = true;
+
+    message.textContent = "ゲーム開始！SPINしてみよう！";
+
+    audioContext.resume();
+    playSound(500, 0.15);
+}
+
+function resetGame() {
+    score = 0;
+    combo = 0;
+    coin = 1000;
+    spinning = false;
+    gameStarted = false;
+    stopped = [false, false, false];
+
+    scoreDisplay.textContent = score;
+    comboDisplay.textContent = combo;
+    coinDisplay.textContent = coin;
+
+    spinButton.disabled = true;
+    autoButton.disabled = true;
+    startButton.disabled = false;
+
+    document.querySelectorAll(".stop-button").forEach(button => {
+        button.disabled = false;
+    });
+
+    comboPopup.classList.remove(
+        "show",
+        "combo-2",
+        "combo-3",
+        "combo-5"
+    );
+
+    message.textContent = "STARTを押してください";
+
+    createReels();
+}
+
+function toggleInfo() {
+    infoPanel.classList.toggle("show");
+}
+
 createReels();
 
+spinButton.disabled = true;
+autoButton.disabled = true;
+
+startButton.addEventListener("click", startGame);
 spinButton.addEventListener("click", spin);
+autoButton.addEventListener("click", autoStop);
+resetButton.addEventListener("click", resetGame);
+infoButton.addEventListener("click", toggleInfo);
 
 document.querySelectorAll(".stop-button").forEach(button => {
     button.addEventListener("click", () => {
         const index = Number(button.dataset.index);
-
-        if (!spinning || stopped[index]) return;
-
-        stopped[index] = true;
-        button.disabled = true;
-
-        const reel = document.querySelectorAll(".reel")[index];
-
-        reel.classList.add("stop");
-        reel.classList.add("stopped");
-
-        playSound(300 + index * 80, 0.1);
-
-        setTimeout(() => {
-            reel.classList.remove("stop");
-            reel.classList.remove("stopped");
-        }, 350);
-
-        if (stopped.every(value => value)) {
-            checkResult();
-
-            spinning = false;
-            spinButton.disabled = false;
-
-            document.querySelectorAll(".stop-button").forEach(button => {
-                button.disabled = false;
-            });
-        }
+        stopReel(index);
     });
 });
