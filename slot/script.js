@@ -31,12 +31,14 @@ const symbols = [
 const reels = document.getElementById("reels");
 const scoreDisplay = document.getElementById("score");
 const comboDisplay = document.getElementById("combo");
+const coinDisplay = document.getElementById("coin");
 const message = document.getElementById("message");
 const spinButton = document.getElementById("spinButton");
 const comboPopup = document.getElementById("comboPopup");
 
 let score = 0;
 let combo = 0;
+let coin = 1000;
 let spinning = false;
 let stopped = [false, false, false, false, false];
 
@@ -102,6 +104,14 @@ function spinReel(reel, index) {
 
 function spin() {
     if (spinning) return;
+
+    if (coin < 10) {
+        message.textContent = "COINが足りません！";
+        return;
+    }
+
+    coin -= 10;
+    coinDisplay.textContent = coin;
 
     audioContext.resume();
     playSound(180, 0.15);
@@ -212,6 +222,9 @@ function checkResult() {
     });
 
     if (gainedScore > 0) {
+        coin += gainedScore;
+        coinDisplay.textContent = coin;
+        
         combo++;
         comboDisplay.textContent = combo;
 

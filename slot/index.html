@@ -2,14 +2,16 @@
 <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device=width,initial-scale=1.0">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <title>REEL ARCADE</title>
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <main class="game">
             <div id="comboPopup" class="combo-popup"></div>
+
             <h1>REEL ARCADE</h1>
+
             <div class="stats">
                 <div class="score">
                     SCORE <span id="score">0</span>
@@ -18,21 +20,30 @@
                 <div class="combo">
                     COMBO <span id="combo">0</span>
                 </div>
+
+                <div class="coin">
+                    COIN <span id="coin">1000</span>
+                </div>
             </div>
+
             <div class="reels" id="reels">
             </div>
+
             <div class="stop-buttons">
-            <button class="stop-button" data-index="0">STOP</button>
-            <button class="stop-button" data-index="1">STOP</button>
-            <button class="stop-button" data-index="2">STOP</button>
+                <button class="stop-button" data-index="0">STOP</button>
+                <button class="stop-button" data-index="1">STOP</button>
+                <button class="stop-button" data-index="2">STOP</button>
             </div>
+
             <div class="message" id="message">
                 SPINしてみよう!
             </div>
+
             <button id="spinButton">
                 SPIN
             </button>
         </main>
+
         <script src="script.js"></script>
     </body>
 </html>
