@@ -483,3 +483,51 @@ h1 {
     80% { transform: translate(6px, -3px); }
     100% { transform: translate(0, 0); }
 }
+
+.reel.spinning {
+    animation: reelShake 0.08s infinite;
+}
+
+@keyframes reelShake {
+    0% {
+        transform: translateY(-2px);
+    }
+    50% {
+        transform: translateY(2px);
+    }
+    100% {
+        transform: translateY(-2px);
+    }
+}
+
+.reel.stopped {
+    animation: reelStop 0.35s ease-out;
+}
+
+@keyframes reelStop {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    30% {
+        transform: scale(1.08);
+        filter: brightness(1.8);
+    }
+    60% {
+        transform: scale(0.96);
+        filter: brightness(1.3);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.reel.spinning .symbol {
+    filter: blur(2px);
+    transform: scaleY(0.9);
+}
+
+.stop-button:active {
+    transform: translateY(4px) scale(0.96);
+}

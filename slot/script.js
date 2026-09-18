@@ -83,6 +83,12 @@ function spinReel(reel, index) {
         if (stopped[index]) {
             clearInterval(interval);
             reel.classList.remove("spinning");
+            reel.classList.add("stopped");
+
+            setTimeout(() => {
+                reel.classList.remove("stopped");
+            }, 350);
+
             return;
         }
 
