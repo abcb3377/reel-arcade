@@ -47,10 +47,11 @@ let coin = 1000;
 let spinning = false;
 let stopped = [false, false, false];
 
-let targetSymbol = "";
-let reelIntervals = [null, null, null];
-let targetTimes = [0, 0, 0];
-let reelPositions = [0, 0, 0];
+let reelData = [];
+let animationFrames = [null, null, null];
+
+const SYMBOL_HEIGHT = 80;
+const SPIN_SPEED = 420;
 
 function randomSymbol() {
     const random = Math.random() * 100;
@@ -75,62 +76,177 @@ function createReels() {
         const reel = document.createElement("div");
         reel.className = "reel";
 
-        for (let row = 0; row < 3; row++) {
+        reel.style.overflow = "hidden";
+        reel.style.position = "relative";
+
+        const track = document.createElement("div");
+
+        track.className = "reel-track";
+
+        track.style.position = "absolute";
+        track.style.left = "0";
+        track.style.top = "0";
+        track.style.width = "100%";
+        track.style.display = "flex";
+        track.style.flexDirection = "column";
+        track.style.willChange = "transform";
+
+        for (let i = 0; i < 60; i++) {
             const symbol = document.createElement("div");
 
             symbol.className = "symbol";
             symbol.textContent = randomSymbol();
 
-            reel.appendChild(symbol);
+            symbol.style.height = `${SYMBOL_HEIGHT}px`;
+            symbol.style.minHeight = `${SYMBOL_HEIGHT}px`;
+            symbol.style.display = "flex";
+            symbol.style.alignItems = "center";
+            symbol.style.justifyContent = "center";
+
+            track.appendChild(symbol);
         }
 
+        reel.appendChild(track);
         reels.appendChild(reel);
     }
 }
 
-function updateReel(reel, index) {
-    const symbolsInReel = reel.querySelectorAll(".symbol");
+function setupReels() {
+    reelData = [];
 
-    const top = symbolsInReel[0].textContent;
-    const middle = symbolsInReel[1].textContent;
-    const bottom = symbolsInReel[2].textContent;
+    const reelElements = document.querySelectorAll(".reel");
 
-    symbolsInReel[0].textContent = bottom;
-    symbolsInReel[1].textContent = top;
-    symbolsInReel[2].textContent = randomSymbol();
+    reelElements.forEach((reel, index) => {
+        const track = reel.querySelector(".reel-track");
 
-    reelPositions[index]++;
+        reelData[index] = {
+            reel: reel,
+            track: track,
+            position: 0,
+            lastTime: null,
+            stopping: false
+        };
 
-    if (symbolsInReel[1].textContent === targetSymbol) {
-        targetTimes[index] = performance.now();
-
-        playSound(500 + index * 80, 0.04);
-    }
+        track.style.transform = "translateY(0px)";
+    });
 }
 
-function spinReel(reel, index) {
-    reel.classList.add("spinning");
+function getCurrentSymbols(index) {
+    const data = reelData[index];
 
-    const speed = 55 + index * 10;
+    const symbolsInTrack =
+        data.track.querySelectorAll(".symbol");
 
-    reelIntervals[index] = setInterval(() => {
-        if (stopped[index]) {
-            clearInterval(reelIntervals[index]);
-            reelIntervals[index] = null;
+    const currentIndex =
+        Math.round(Math.abs(data.position) / SYMBOL_HEIGHT);
 
-            reel.classList.remove("spinning");
-            reel.classList.add("stopped");
+    const topIndex = currentIndex;
+    const middleIndex = currentIndex + 1;
+    const bottomIndex = currentIndex + 2;
 
-            setTimeout(() => {
-                reel.classList.remove("stopped");
-            }, 350);
+    return [
+        symbolsInTrack[topIndex % symbolsInTrack.length].textContent,
+        symbolsInTrack[middleIndex % symbolsInTrack.length].textContent,
+        symbolsInTrack[bottomIndex % symbolsInTrack.length].textContent
+    ];
+}
 
-            return;
+function updateReel(index, timestamp) {
+    if (!spinning || stopped[index]) {
+        return;
+    }
+
+    const data = reelData[index];
+
+    if (data.lastTime === null) {
+        data.lastTime = timestamp;
+    }
+
+    const delta = (timestamp - data.lastTime) / 1000;
+
+    data.lastTime = timestamp;
+
+    data.position += SPIN_SPEED * delta;
+
+    const maxPosition = 50 * SYMBOL_HEIGHT;
+
+    if (data.position >= maxPosition) {
+        data.position -= 30 * SYMBOL_HEIGHT;
+    }
+
+    data.track.style.transform =
+        `translateY(-${data.position}px)`;
+
+    animationFrames[index] =
+        requestAnimationFrame(time => {
+            updateReel(index, time);
+        });
+}
+
+function spinReel(index) {
+    const data = reelData[index];
+
+    data.lastTime = null;
+
+    animationFrames[index] =
+        requestAnimationFrame(time => {
+            updateReel(index, time);
+        });
+}
+
+function stopReel(index) {
+    if (!spinning || stopped[index]) return;
+
+    stopped[index] = true;
+
+    const button = document.querySelector(
+        `.stop-button[data-index="${index}"]`
+    );
+
+    if (button) {
+        button.disabled = true;
+    }
+
+    const data = reelData[index];
+
+    if (animationFrames[index]) {
+        cancelAnimationFrame(animationFrames[index]);
+        animationFrames[index] = null;
+    }
+
+    const currentPosition = data.position;
+
+    const snappedPosition =
+        Math.round(currentPosition / SYMBOL_HEIGHT) *
+        SYMBOL_HEIGHT;
+
+    data.position = snappedPosition;
+
+    data.track.style.transition =
+        "transform 0.12s cubic-bezier(0.2, 0.8, 0.3, 1)";
+
+    data.track.style.transform =
+        `translateY(-${snappedPosition}px)`;
+
+    playSound(300 + index * 80, 0.1);
+
+    setTimeout(() => {
+        data.track.style.transition = "";
+
+        data.position = snappedPosition;
+
+        const reel = data.reel;
+
+        reel.classList.add("stopped");
+
+        setTimeout(() => {
+            reel.classList.remove("stopped");
+        }, 350);
+
+        if (stopped.every(value => value)) {
+            finishSpin();
         }
-
-        updateReel(reel, index);
-
-    }, speed);
+    }, 130);
 }
 
 function spin() {
@@ -162,153 +278,31 @@ function spin() {
         "combo-5"
     );
 
-    targetSymbol =
-        symbols[Math.floor(Math.random() * symbols.length)];
-
-    message.textContent = `狙い：${targetSymbol}`;
+    message.textContent = "STOPで止めよう！";
 
     stopped = [false, false, false];
-    targetTimes = [0, 0, 0];
-    reelPositions = [0, 0, 0];
+
+    setupReels();
 
     document.querySelectorAll(".stop-button").forEach(button => {
         button.disabled = false;
     });
 
-    const reelElements = document.querySelectorAll(".reel");
-
-    reelElements.forEach((reel, index) => {
-        spinReel(reel, index);
-    });
-}
-
-function getTimingResult(index) {
-    const reel = document.querySelectorAll(".reel")[index];
-
-    if (!reel) {
-        return {
-            result: "MISS",
-            bonus: 0
-        };
-    }
-
-    const symbolsInReel = reel.querySelectorAll(".symbol");
-    const centerSymbol = symbolsInReel[1].textContent;
-
-    if (centerSymbol !== targetSymbol) {
-        return {
-            result: "MISS",
-            bonus: 0
-        };
-    }
-
-    const elapsed = performance.now() - targetTimes[index];
-
-    if (elapsed <= 90) {
-        return {
-            result: "PERFECT",
-            bonus: 100
-        };
-    }
-
-    if (elapsed <= 180) {
-        return {
-            result: "GOOD",
-            bonus: 50
-        };
-    }
-
-    return {
-        result: "MISS",
-        bonus: 0
-    };
-}
-
-function stopReel(index) {
-    if (!spinning || stopped[index]) return;
-
-    stopped[index] = true;
-
-    const button = document.querySelector(
-        `.stop-button[data-index="${index}"]`
-    );
-
-    if (button) {
-        button.disabled = true;
-    }
-
-    const reel = document.querySelectorAll(".reel")[index];
-
-    const timing = getTimingResult(index);
-
-    reel.dataset.timing = timing.result;
-    reel.dataset.bonus = timing.bonus;
-
-    reel.classList.add("stop");
-    reel.classList.add("stopped");
-
-    if (timing.result === "PERFECT") {
-        playSound(900, 0.12);
-    } else if (timing.result === "GOOD") {
-        playSound(650, 0.1);
-    } else {
-        playSound(250, 0.1);
-    }
-
-    setTimeout(() => {
-        reel.classList.remove("stop");
-        reel.classList.remove("stopped");
-    }, 350);
-
-    if (stopped.every(value => value)) {
-        finishSpin();
+    for (let i = 0; i < 3; i++) {
+        spinReel(i);
     }
 }
 
 function finishSpin() {
-    checkResult();
-
     const reelElements = document.querySelectorAll(".reel");
 
-    let perfectCount = 0;
-    let goodCount = 0;
+    const grid = [];
 
-    reelElements.forEach(reel => {
-        if (reel.dataset.timing === "PERFECT") {
-            perfectCount++;
-        }
-
-        if (reel.dataset.timing === "GOOD") {
-            goodCount++;
-        }
-    });
-
-    let timingBonus = 0;
-
-    reelElements.forEach(reel => {
-        timingBonus += Number(reel.dataset.bonus || 0);
-    });
-
-    if (timingBonus > 0) {
-        score += timingBonus;
-        scoreDisplay.textContent = score;
-
-        coin += timingBonus;
-        coinDisplay.textContent = coin;
+    for (let column = 0; column < 3; column++) {
+        grid[column] = getCurrentSymbols(column);
     }
 
-    if (perfectCount === 3) {
-        message.textContent += "　🔥 ALL PERFECT！";
-        successEffect();
-    } else if (perfectCount >= 1) {
-        message.textContent += `　PERFECT ×${perfectCount}`;
-    } else if (goodCount >= 1) {
-        message.textContent += `　GOOD ×${goodCount}`;
-    }
-
-    if (timingBonus > 0) {
-        message.textContent += `　目押しBONUS +${timingBonus}`;
-    }
+    checkResult(grid);
 
     spinning = false;
 
@@ -354,7 +348,7 @@ function successEffect() {
     }
 }
 
-function checkResult() {
+function checkResult(grid) {
     const scoreValues = {
         "🍒": 100,
         "🍀": 150,
@@ -364,18 +358,6 @@ function checkResult() {
     };
 
     const reelElements = document.querySelectorAll(".reel");
-    const grid = [];
-
-    for (let column = 0; column < 3; column++) {
-        const symbolsInReel =
-            reelElements[column].querySelectorAll(".symbol");
-
-        grid[column] = [
-            symbolsInReel[0].textContent,
-            symbolsInReel[1].textContent,
-            symbolsInReel[2].textContent
-        ];
-    }
 
     const lines = [
         [[0, 0], [1, 0], [2, 0]],
@@ -401,8 +383,21 @@ function checkResult() {
             baseScore += scoreValues[symbolA];
 
             line.forEach(([column, row]) => {
-                reelElements[column]
-                    .querySelectorAll(".symbol")[row]
+                const symbolsInReel =
+                    reelElements[column]
+                        .querySelectorAll(".symbol");
+
+                const currentIndex =
+                    Math.round(
+                        Math.abs(reelData[column].position) /
+                        SYMBOL_HEIGHT
+                    );
+
+                const actualIndex =
+                    (currentIndex + row) %
+                    symbolsInReel.length;
+
+                symbolsInReel[actualIndex]
                     .classList.add("win");
             });
         }
@@ -410,9 +405,11 @@ function checkResult() {
 
     if (baseScore > 0) {
         combo++;
+
         comboDisplay.textContent = combo;
 
-        const gainedScore = baseScore * combo;
+        const gainedScore =
+            baseScore * combo;
 
         coin += gainedScore;
         coinDisplay.textContent = coin;
@@ -420,7 +417,8 @@ function checkResult() {
         score += gainedScore;
         scoreDisplay.textContent = score;
 
-        comboPopup.textContent = `COMBO ×${combo}`;
+        comboPopup.textContent =
+            `COMBO ×${combo}`;
 
         comboPopup.classList.remove(
             "show",
@@ -432,10 +430,13 @@ function checkResult() {
         if (combo >= 5) {
             comboPopup.classList.add("combo-5");
 
-            const game = document.querySelector(".game");
+            const game =
+                document.querySelector(".game");
 
             game.classList.remove("combo-shake");
+
             void game.offsetWidth;
+
             game.classList.add("combo-shake");
 
         } else if (combo >= 3) {
@@ -446,6 +447,7 @@ function checkResult() {
         }
 
         void comboPopup.offsetWidth;
+
         comboPopup.classList.add("show");
 
         message.textContent =
@@ -454,25 +456,33 @@ function checkResult() {
         successEffect();
 
         message.classList.remove("success");
+
         void message.offsetWidth;
+
         message.classList.add("success");
 
-        const game = document.querySelector(".game");
+        const game =
+            document.querySelector(".game");
 
         game.classList.remove("success-flash");
+
         void game.offsetWidth;
+
         game.classList.add("success-flash");
 
     } else {
         combo = 0;
+
         comboDisplay.textContent = combo;
 
-        message.textContent = "もう一度チャレンジ！";
+        message.textContent =
+            "もう一度チャレンジ！";
     }
 }
 
 function toggleInfo() {
-    const infoPanel = document.getElementById("infoPanel");
+    const infoPanel =
+        document.getElementById("infoPanel");
 
     if (infoPanel) {
         infoPanel.classList.toggle("show");
@@ -487,7 +497,8 @@ spinButton.addEventListener("click", spin);
 
 document.querySelectorAll(".stop-button").forEach(button => {
     button.addEventListener("click", () => {
-        const index = Number(button.dataset.index);
+        const index =
+            Number(button.dataset.index);
 
         stopReel(index);
     });
