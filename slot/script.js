@@ -44,7 +44,6 @@ let score = 0;
 let combo = 0;
 let coin = 1000;
 let spinning = false;
-let gameStarted = false;
 let stopped = [false, false, false];
 
 function randomSymbol() {
@@ -89,6 +88,7 @@ function spinReel(reel, index) {
     const interval = setInterval(() => {
         if (stopped[index]) {
             clearInterval(interval);
+
             reel.classList.remove("spinning");
             reel.classList.add("stopped");
 
@@ -110,7 +110,7 @@ function spinReel(reel, index) {
 function spin() {
     if (spinning) return;
 
-    if (coin < 10) {
+    if (coin < bet) {
         message.textContent = "COINが足りません！";
         return;
     }
@@ -149,7 +149,7 @@ function stopReel(index) {
     stopped[index] = true;
 
     const button = document.querySelector(
-        `.stop-button[data-index="${index}"]`
+        `.stop-button[data-index="${index}]`
     );
 
     if (button) {
@@ -184,24 +184,6 @@ function finishSpin() {
     });
 }
 
-function autoStop() {
-    if (!gameStarted || !spinning) return;
-
-    autoButton.disabled = true;
-
-    setTimeout(() => {
-        if (spinning) stopReel(0);
-    }, 600);
-
-    setTimeout(() => {
-        if (spinning) stopReel(1);
-    }, 1200);
-
-    setTimeout(() => {
-        if (spinning) stopReel(2);
-    }, 1800);
-}
-
 function successEffect() {
     const game = document.querySelector(".game");
 
@@ -211,8 +193,8 @@ function successEffect() {
 
     for (let i = 0; i < 30; i++) {
         const spark = document.createElement("div");
-        spark.className = "spark";
 
+        spark.className = "spark";
         spark.style.left = "50%";
         spark.style.top = "50%";
 
@@ -277,7 +259,10 @@ function checkResult() {
         const symbolB = grid[b[0]][b[1]];
         const symbolC = grid[c[0]][c[1]];
 
-        if (symbolA === symbolB && symbolB === symbolC) {
+        if (
+            symbolA === symbolB &&
+            symbolB === symbolC
+        ) {
             gainedScore += scoreValues[symbolA];
 
             line.forEach(([column, row]) => {
@@ -308,6 +293,7 @@ function checkResult() {
             comboPopup.classList.add("combo-5");
 
             const game = document.querySelector(".game");
+
             game.classList.remove("combo-shake");
             void game.offsetWidth;
             game.classList.add("combo-shake");
@@ -340,56 +326,29 @@ function checkResult() {
     } else {
         combo = 0;
         comboDisplay.textContent = combo;
+
         message.textContent = "もう一度チャレンジ！";
     }
 }
 
-function resetGame() {
-    score = 0;
-    combo = 0;
-    coin = 1000;
-    spinning = false;
-    gameStarted = false;
-    stopped = [false, false, false];
-
-    scoreDisplay.textContent = score;
-    comboDisplay.textContent = combo;
-    coinDisplay.textContent = coin;
-
-    spinButton.disabled = true;
-    autoButton.disabled = true;
-    startButton.disabled = false;
-
-    document.querySelectorAll(".stop-button").forEach(button => {
-        button.disabled = false;
-    });
-
-    comboPopup.classList.remove(
-        "show",
-        "combo-2",
-        "combo-3",
-        "combo-5"
-    );
-
-    message.textContent = "STARTを押してください";
-
-    createReels();
-}
-
 function toggleInfo() {
-    infoPanel.classList.toggle("show");
+    const infoPanel = document.getElementById("inforPanel");
+
+    if (infoPanel) {
+        infoPanel.classList.toggle("show");
+    }
 }
 
 createReels();
 
-spinButton.disabled = true;
-autoButton.disabled = true;
+spinButton.disabled = false;
 
 spinButton.addEventListener("click", spin);
 
 document.querySelectorAll(".stop-button").forEach(button => {
     button.addEventListener("click", () => {
         const index = Number(button.dataset.index);
+
         stopReel(index);
     });
 });
@@ -408,4 +367,4 @@ betDisplay.addEventListener("click", () => {
     }
 
     betValue.textContent = bet;
-});
+})
