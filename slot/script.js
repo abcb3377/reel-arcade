@@ -142,16 +142,26 @@ function setupReels() {
         const symbolHeight =
             reel.clientHeight / 3;
 
+        const startIndex =
+            Math.floor(
+                Math.random() * SYMBOL_COUNT
+            );
+
+        const startPosition =
+            startIndex * symbolHeight;
+
         reelData[index] = {
             reel: reel,
             track: track,
-            position: 0,
+            position: startPosition,
             lastTime: null,
             symbolHeight: symbolHeight
         };
 
         track.style.transition = "";
-        track.style.transform = "translateY(0px)";
+
+        track.style.transform =
+            `translateY(-${startPosition}px)`;
     });
 }
 
