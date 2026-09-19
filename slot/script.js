@@ -309,7 +309,7 @@ function checkResult() {
         comboPopup,textContent = score;
 
         message.textContent =
-            `成功！ +${gainedScore} SCORE  COMBO ×${combo}`;
+            `成功！ +${gainedScore} SCORE (基本${baseScore} × COMBO${combo})`;
 
         successEffect();
 
