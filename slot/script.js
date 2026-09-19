@@ -28,7 +28,7 @@ const symbols = [
     "🍀",
     "💎",
     "🔥",
-    "🍒",
+    "🍒"
 ];
 
 const reels = document.getElementById("reels");
@@ -43,8 +43,14 @@ let bet = 10;
 let score = 0;
 let combo = 0;
 let coin = 1000;
+
 let spinning = false;
 let stopped = [false, false, false];
+
+let targetSymbol = "";
+let reelIntervals = [null, null, null];
+let targetTimes = [0, 0, 0];
+let reelPositions = [0, 0, 0];
 
 function randomSymbol() {
     const random = Math.random() * 100;
@@ -82,12 +88,35 @@ function createReels() {
     }
 }
 
+function updateReel(reel, index) {
+    const symbolsInReel = reel.querySelectorAll(".symbol");
+
+    const top = symbolsInReel[0].textContent;
+    const middle = symbolsInReel[1].textContent;
+    const bottom = symbolsInReel[2].textContent;
+
+    symbolsInReel[0].textContent = bottom;
+    symbolsInReel[1].textContent = top;
+    symbolsInReel[2].textContent = randomSymbol();
+
+    reelPositions[index]++;
+
+    if (symbolsInReel[1].textContent === targetSymbol) {
+        targetTimes[index] = performance.now();
+
+        playSound(500 + index * 80, 0.04);
+    }
+}
+
 function spinReel(reel, index) {
     reel.classList.add("spinning");
 
-    const interval = setInterval(() => {
+    const speed = 55 + index * 10;
+
+    reelIntervals[index] = setInterval(() => {
         if (stopped[index]) {
-            clearInterval(interval);
+            clearInterval(reelIntervals[index]);
+            reelIntervals[index] = null;
 
             reel.classList.remove("spinning");
             reel.classList.add("stopped");
@@ -99,12 +128,9 @@ function spinReel(reel, index) {
             return;
         }
 
-        const symbolsInReel = reel.querySelectorAll(".symbol");
+        updateReel(reel, index);
 
-        symbolsInReel.forEach(symbol => {
-            symbol.textContent = randomSymbol();
-        });
-    }, 40);
+    }, speed);
 }
 
 function spin() {
@@ -119,6 +145,7 @@ function spin() {
     coinDisplay.textContent = coin;
 
     audioContext.resume();
+
     playSound(180, 0.15);
 
     spinning = true;
@@ -128,9 +155,21 @@ function spin() {
         symbol.classList.remove("win");
     });
 
-    message.textContent = "STOPで止めよう！";
+    comboPopup.classList.remove(
+        "show",
+        "combo-2",
+        "combo-3",
+        "combo-5"
+    );
+
+    targetSymbol =
+        symbols[Math.floor(Math.random() * symbols.length)];
+
+    message.textContent = `狙い：${targetSymbol}`;
 
     stopped = [false, false, false];
+    targetTimes = [0, 0, 0];
+    reelPositions = [0, 0, 0];
 
     document.querySelectorAll(".stop-button").forEach(button => {
         button.disabled = false;
@@ -141,6 +180,48 @@ function spin() {
     reelElements.forEach((reel, index) => {
         spinReel(reel, index);
     });
+}
+
+function getTimingResult(index) {
+    const reel = document.querySelectorAll(".reel")[index];
+
+    if (!reel) {
+        return {
+            result: "MISS",
+            bonus: 0
+        };
+    }
+
+    const symbolsInReel = reel.querySelectorAll(".symbol");
+    const centerSymbol = symbolsInReel[1].textContent;
+
+    if (centerSymbol !== targetSymbol) {
+        return {
+            result: "MISS",
+            bonus: 0
+        };
+    }
+
+    const elapsed = performance.now() - targetTimes[index];
+
+    if (elapsed <= 90) {
+        return {
+            result: "PERFECT",
+            bonus: 100
+        };
+    }
+
+    if (elapsed <= 180) {
+        return {
+            result: "GOOD",
+            bonus: 50
+        };
+    }
+
+    return {
+        result: "MISS",
+        bonus: 0
+    };
 }
 
 function stopReel(index) {
@@ -158,10 +239,21 @@ function stopReel(index) {
 
     const reel = document.querySelectorAll(".reel")[index];
 
+    const timing = getTimingResult(index);
+
+    reel.dataset.timing = timing.result;
+    reel.dataset.bonus = timing.bonus;
+
     reel.classList.add("stop");
     reel.classList.add("stopped");
 
-    playSound(300 + index * 80, 0.1);
+    if (timing.result === "PERFECT") {
+        playSound(900, 0.12);
+    } else if (timing.result === "GOOD") {
+        playSound(650, 0.1);
+    } else {
+        playSound(250, 0.1);
+    }
 
     setTimeout(() => {
         reel.classList.remove("stop");
@@ -176,11 +268,53 @@ function stopReel(index) {
 function finishSpin() {
     checkResult();
 
+    const reelElements = document.querySelectorAll(".reel");
+
+    let perfectCount = 0;
+    let goodCount = 0;
+
+    reelElements.forEach(reel => {
+        if (reel.dataset.timing === "PERFECT") {
+            perfectCount++;
+        }
+
+        if (reel.dataset.timing === "GOOD") {
+            goodCount++;
+        }
+    });
+
+    let timingBonus = 0;
+
+    reelElements.forEach(reel => {
+        timingBonus += Number(reel.dataset.bonus || 0);
+    });
+
+    if (timingBonus > 0) {
+        score += timingBonus;
+        scoreDisplay.textContent = score;
+
+        coin += timingBonus;
+        coinDisplay.textContent = coin;
+    }
+
+    if (perfectCount === 3) {
+        message.textContent += "　🔥 ALL PERFECT！";
+        successEffect();
+    } else if (perfectCount >= 1) {
+        message.textContent += `　PERFECT ×${perfectCount}`;
+    } else if (goodCount >= 1) {
+        message.textContent += `　GOOD ×${goodCount}`;
+    }
+
+    if (timingBonus > 0) {
+        message.textContent += `　目押しBONUS +${timingBonus}`;
+    }
+
     spinning = false;
 
     spinButton.disabled = false;
 
-    document.querySelectorAll(".stop-button").forEach(button =>{
+    document.querySelectorAll(".stop-button").forEach(button => {
         button.disabled = false;
     });
 }
@@ -283,6 +417,9 @@ function checkResult() {
         coin += gainedScore;
         coinDisplay.textContent = coin;
 
+        score += gainedScore;
+        scoreDisplay.textContent = score;
+
         comboPopup.textContent = `COMBO ×${combo}`;
 
         comboPopup.classList.remove(
@@ -300,16 +437,19 @@ function checkResult() {
             game.classList.remove("combo-shake");
             void game.offsetWidth;
             game.classList.add("combo-shake");
+
         } else if (combo >= 3) {
             comboPopup.classList.add("combo-3");
+
         } else if (combo >= 2) {
             comboPopup.classList.add("combo-2");
         }
 
         void comboPopup.offsetWidth;
+        comboPopup.classList.add("show");
 
         message.textContent =
-            `成功！ +${gainedScore} SCORE (基本${baseScore} × COMBO${combo})`;
+            `成功！ +${gainedScore} SCORE（基本${baseScore} × COMBO${combo}）`;
 
         successEffect();
 
@@ -322,6 +462,7 @@ function checkResult() {
         game.classList.remove("success-flash");
         void game.offsetWidth;
         game.classList.add("success-flash");
+
     } else {
         combo = 0;
         comboDisplay.textContent = combo;
@@ -331,7 +472,7 @@ function checkResult() {
 }
 
 function toggleInfo() {
-    const infoPanel = document.getElementById("inforPanel");
+    const infoPanel = document.getElementById("infoPanel");
 
     if (infoPanel) {
         infoPanel.classList.toggle("show");
@@ -366,4 +507,4 @@ betDisplay.addEventListener("click", () => {
     }
 
     betValue.textContent = bet;
-})
+});
