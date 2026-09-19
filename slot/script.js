@@ -250,7 +250,7 @@ function checkResult() {
         [[2, 0], [1, 1], [0, 2]]
     ];
 
-    let gainedScore = 0;
+    let baseScore = 0;
 
     lines.forEach(line => {
         const [a, b, c] = line;
@@ -263,7 +263,7 @@ function checkResult() {
             symbolA === symbolB &&
             symbolB === symbolC
         ) {
-            gainedScore += scoreValues[symbolA];
+            baseScore += scoreValues[symbolA];
 
             line.forEach(([column, row]) => {
                 reelElements[column]
@@ -273,12 +273,14 @@ function checkResult() {
         }
     });
 
-    if (gainedScore > 0) {
-        coin += gainedScore;
-        coinDisplay.textContent = coin;
-
+    if (baseScore > 0) {
         combo++;
         comboDisplay.textContent = combo;
+
+        const gainedScore = baseScore * combo;
+
+        coin += gainedScore;
+        coinDisplay.textContent = coin;
 
         comboPopup.textContent = `COMBO ×${combo}`;
 
@@ -303,11 +305,8 @@ function checkResult() {
             comboPopup.classList.add("combo-2");
         }
 
-        void comboPopup.offsetWidth;
-        comboPopup.classList.add("show");
-
-        score += gainedScore;
-        scoreDisplay.textContent = score;
+        void comboPopup,offsetWidth;
+        comboPopup,textContent = score;
 
         message.textContent =
             `成功！ +${gainedScore} SCORE  COMBO ×${combo}`;
