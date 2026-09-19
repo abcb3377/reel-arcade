@@ -149,7 +149,7 @@ function stopReel(index) {
     stopped[index] = true;
 
     const button = document.querySelector(
-        `.stop-button[data-index="${index}]`
+        `.stop-button[data-index="${index}"]`
     );
 
     if (button) {
@@ -306,8 +306,7 @@ function checkResult() {
             comboPopup.classList.add("combo-2");
         }
 
-        void comboPopup,offsetWidth;
-        comboPopup,textContent = score;
+        void comboPopup.offsetWidth;
 
         message.textContent =
             `成功！ +${gainedScore} SCORE (基本${baseScore} × COMBO${combo})`;
