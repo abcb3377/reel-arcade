@@ -50,7 +50,7 @@ let stopped = [false, false, false];
 let reelData = [];
 let animationFrames = [null, null, null];
 
-const SPIN_SPEED = 500;
+const SPIN_SPEED = 800;
 const SYMBOL_COUNT = 30;
 
 function randomSymbol() {
