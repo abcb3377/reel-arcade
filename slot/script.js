@@ -199,6 +199,17 @@ function getCurrentSymbols(index) {
     ];
 }
 
+function spinReel(index) {
+    const data = reelData[index];
+
+    data.lastTime = null;
+
+    animationFrames[index] =
+        requestAnimationFrame(time => {
+            updateReel(index, time);
+        });
+}
+
 function updateReel(index, timestamp) {
     if (!spinning || stopped[index]) {
         return;
@@ -227,7 +238,7 @@ function updateReel(index, timestamp) {
     }
 
     data.track.style.transform =
-        `translateY(-${data.position}px)`;
+        `translate3d(0, -${data.position}px, 0)`;
 
     animationFrames[index] =
         requestAnimationFrame(time => {
@@ -252,8 +263,6 @@ function stopReel(index) {
     }
 
     const data = reelData[index];
-
-    data.reel.classList.remove("spinning");
 
     if (animationFrames[index] !== null) {
         cancelAnimationFrame(
@@ -283,77 +292,7 @@ function stopReel(index) {
         "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
 
     data.track.style.transform =
-        `translateY(-${data.position}px)`;
-
-    playSound(
-        300 + index * 80,
-        0.1
-    );
-
-    setTimeout(() => {
-        data.track.style.transition = "";
-
-        const reel = data.reel;
-
-        reel.classList.add("stopped");
-
-        setTimeout(() => {
-            reel.classList.remove("stopped");
-        }, 350);
-
-        if (stopped.every(value => value)) {
-            finishSpin();
-        }
-    }, 230);
-}
-
-function stopReel(index) {
-    if (!spinning || stopped[index]) {
-        return;
-    }
-
-    stopped[index] = true;
-
-    const button =
-        document.querySelector(
-            `.stop-button[data-index="${index}"]`
-        );
-
-    if (button) {
-        button.disabled = true;
-    }
-
-    const data = reelData[index];
-
-    if (animationFrames[index]) {
-        cancelAnimationFrame(
-            animationFrames[index]
-        );
-
-        animationFrames[index] = null;
-    }
-
-    const currentPosition =
-        data.position;
-
-    const snappedPosition =
-        Math.round(
-            currentPosition /
-            data.symbolHeight
-        ) * data.symbolHeight;
-
-    const loopDistance =
-        SYMBOL_COUNT *
-        data.symbolHeight;
-
-    data.position =
-        snappedPosition % loopDistance;
-
-    data.track.style.transition =
-        "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
-
-    data.track.style.transform =
-        `translateY(-${data.position}px)`;
+        `translate3d(0, -${data.position}px, 0)`;
 
     playSound(
         300 + index * 80,
