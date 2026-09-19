@@ -235,17 +235,76 @@ function updateReel(index, timestamp) {
         });
 }
 
-function spinReel(index) {
+function stopReel(index) {
+    if (!spinning || stopped[index]) {
+        return;
+    }
+
+    stopped[index] = true;
+
+    const button =
+        document.querySelector(
+            `.stop-button[data-index="${index}"]`
+        );
+
+    if (button) {
+        button.disabled = true;
+    }
+
     const data = reelData[index];
 
-    data.lastTime = null;
+    data.reel.classList.remove("spinning");
 
-    data.reel.classList.add("spinning");
+    if (animationFrames[index] !== null) {
+        cancelAnimationFrame(
+            animationFrames[index]
+        );
 
-    animationFrames[index] =
-        requestAnimationFrame(time => {
-            updateReel(index, time);
-        });
+        animationFrames[index] = null;
+    }
+
+    const currentPosition =
+        data.position;
+
+    const snappedPosition =
+        Math.round(
+            currentPosition /
+            data.symbolHeight
+        ) * data.symbolHeight;
+
+    const loopDistance =
+        SYMBOL_COUNT *
+        data.symbolHeight;
+
+    data.position =
+        snappedPosition % loopDistance;
+
+    data.track.style.transition =
+        "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
+
+    data.track.style.transform =
+        `translateY(-${data.position}px)`;
+
+    playSound(
+        300 + index * 80,
+        0.1
+    );
+
+    setTimeout(() => {
+        data.track.style.transition = "";
+
+        const reel = data.reel;
+
+        reel.classList.add("stopped");
+
+        setTimeout(() => {
+            reel.classList.remove("stopped");
+        }, 350);
+
+        if (stopped.every(value => value)) {
+            finishSpin();
+        }
+    }, 230);
 }
 
 function stopReel(index) {
