@@ -240,6 +240,8 @@ function spinReel(index) {
 
     data.lastTime = null;
 
+    data.reel.classList.add("spinning");
+
     animationFrames[index] =
         requestAnimationFrame(time => {
             updateReel(index, time);
