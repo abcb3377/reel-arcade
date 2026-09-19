@@ -645,3 +645,41 @@ h1 {
     min-width: 0;
     box-sizing: border-box;
 }
+
+.stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 90% !important;
+    max-width: 600px !important;
+    margin: 0 auto 20px !important;
+    box-sizing: border-box;
+}
+
+.score,
+.combo,
+.bet,
+.coin {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 60px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #333;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #222, #080808);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.score span,
+.combo span,
+.bet span,
+.coin span {
+    margin-left: 8px;
+    font-size: 24px;
+}
