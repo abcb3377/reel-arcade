@@ -177,9 +177,10 @@ function finishSpin() {
     checkResult();
 
     spinning = false;
+
     spinButton.disabled = false;
 
-    document.querySelectorAll(".stop-button").forEach(button => {
+    document.querySelectorAll(".stop-button").forEach(button =>{
         button.disabled = false;
     });
 }
