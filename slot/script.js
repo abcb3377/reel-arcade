@@ -39,12 +39,6 @@ const message = document.getElementById("message");
 const spinButton = document.getElementById("spinButton");
 const comboPopup = document.getElementById("comboPopup");
 
-const startButton = document.getElementById("startButton");
-const autoButton = document.getElementById("autoButton");
-const resetButton = document.getElementById("resetButton");
-const infoButton = document.getElementById("infoButton");
-const infoPanel = document.getElementById("infoPanel");
-
 let bet = 10;
 let score = 0;
 let combo = 0;
@@ -114,7 +108,7 @@ function spinReel(reel, index) {
 }
 
 function spin() {
-    if (!gameStarted || spinning) return;
+    if (spinning) return;
 
     if (coin < 10) {
         message.textContent = "COINが足りません！";
@@ -129,7 +123,6 @@ function spin() {
 
     spinning = true;
     spinButton.disabled = true;
-    autoButton.disabled = false;
 
     document.querySelectorAll(".symbol").forEach(symbol => {
         symbol.classList.remove("win");
@@ -185,7 +178,6 @@ function finishSpin() {
 
     spinning = false;
     spinButton.disabled = false;
-    autoButton.disabled = true;
 
     document.querySelectorAll(".stop-button").forEach(button => {
         button.disabled = false;
@@ -352,19 +344,6 @@ function checkResult() {
     }
 }
 
-function startGame() {
-    if (gameStarted) return;
-
-    gameStarted = true;
-    spinButton.disabled = false;
-    startButton.disabled = true;
-
-    message.textContent = "ゲーム開始！SPINしてみよう！";
-
-    audioContext.resume();
-    playSound(500, 0.15);
-}
-
 function resetGame() {
     score = 0;
     combo = 0;
@@ -406,11 +385,7 @@ createReels();
 spinButton.disabled = true;
 autoButton.disabled = true;
 
-startButton.addEventListener("click", startGame);
 spinButton.addEventListener("click", spin);
-autoButton.addEventListener("click", autoStop);
-resetButton.addEventListener("click", resetGame);
-infoButton.addEventListener("click", toggleInfo);
 
 document.querySelectorAll(".stop-button").forEach(button => {
     button.addEventListener("click", () => {
