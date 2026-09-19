@@ -289,7 +289,7 @@ function stopReel(index) {
         snappedPosition % loopDistance;
 
     data.track.style.transition =
-        "transform 0.12s cubic-bezier(0.2, 0.8, 0.3, 1)";
+        "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
 
     data.track.style.transform =
         `translateY(-${data.position}px)`;
@@ -313,7 +313,7 @@ function stopReel(index) {
         if (stopped.every(value => value)) {
             finishSpin();
         }
-    }, 130);
+    }, 230);
 }
 
 function spin() {
