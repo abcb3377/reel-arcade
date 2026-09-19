@@ -628,3 +628,20 @@ h1 {
 .bet:active {
     transform: scale(0.95);
 }
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 90%;
+    max-width: 600px;
+    margin: 0 auto 20px;
+}
+
+.score,
+.combo,
+.bet,
+.coin {
+    min-width: 0;
+    box-sizing: border-box;
+}
