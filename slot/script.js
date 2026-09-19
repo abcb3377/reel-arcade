@@ -50,8 +50,8 @@ let stopped = [false, false, false];
 let reelData = [];
 let animationFrames = [null, null, null];
 
-const SYMBOL_HEIGHT = 80;
-const SPIN_SPEED = 420;
+const SPIN_SPEED = 1200;
+const SYMBOL_COUNT = 30;
 
 function randomSymbol() {
     const random = Math.random() * 100;
@@ -74,6 +74,7 @@ function createReels() {
 
     for (let column = 0; column < 3; column++) {
         const reel = document.createElement("div");
+
         reel.className = "reel";
 
         reel.style.overflow = "hidden";
@@ -91,42 +92,65 @@ function createReels() {
         track.style.flexDirection = "column";
         track.style.willChange = "transform";
 
-        for (let i = 0; i < 60; i++) {
-            const symbol = document.createElement("div");
+        const reelSymbols = [];
 
-            symbol.className = "symbol";
-            symbol.textContent = randomSymbol();
+        for (let i = 0; i < SYMBOL_COUNT; i++) {
+            reelSymbols.push(randomSymbol());
+        }
 
-            symbol.style.height = `${SYMBOL_HEIGHT}px`;
-            symbol.style.minHeight = `${SYMBOL_HEIGHT}px`;
-            symbol.style.display = "flex";
-            symbol.style.alignItems = "center";
-            symbol.style.justifyContent = "center";
+        for (let repeat = 0; repeat < 3; repeat++) {
+            reelSymbols.forEach(symbolText => {
+                const symbol = document.createElement("div");
 
-            track.appendChild(symbol);
+                symbol.className = "symbol";
+                symbol.textContent = symbolText;
+
+                symbol.style.display = "flex";
+                symbol.style.alignItems = "center";
+                symbol.style.justifyContent = "center";
+
+                track.appendChild(symbol);
+            });
         }
 
         reel.appendChild(track);
         reels.appendChild(reel);
     }
+
+    requestAnimationFrame(() => {
+        document.querySelectorAll(".reel").forEach(reel => {
+            const symbolHeight = reel.clientHeight / 3;
+
+            reel.querySelectorAll(".symbol").forEach(symbol => {
+                symbol.style.height = `${symbolHeight}px`;
+                symbol.style.minHeight = `${symbolHeight}px`;
+            });
+        });
+    });
 }
 
 function setupReels() {
     reelData = [];
 
-    const reelElements = document.querySelectorAll(".reel");
+    const reelElements =
+        document.querySelectorAll(".reel");
 
     reelElements.forEach((reel, index) => {
-        const track = reel.querySelector(".reel-track");
+        const track =
+            reel.querySelector(".reel-track");
+
+        const symbolHeight =
+            reel.clientHeight / 3;
 
         reelData[index] = {
             reel: reel,
             track: track,
             position: 0,
             lastTime: null,
-            stopping: false
+            symbolHeight: symbolHeight
         };
 
+        track.style.transition = "";
         track.style.transform = "translateY(0px)";
     });
 }
@@ -137,17 +161,31 @@ function getCurrentSymbols(index) {
     const symbolsInTrack =
         data.track.querySelectorAll(".symbol");
 
-    const currentIndex =
-        Math.round(Math.abs(data.position) / SYMBOL_HEIGHT);
+    const symbolHeight =
+        data.symbolHeight;
 
-    const topIndex = currentIndex;
-    const middleIndex = currentIndex + 1;
-    const bottomIndex = currentIndex + 2;
+    const currentIndex =
+        Math.round(
+            Math.abs(data.position) /
+            symbolHeight
+        );
+
+    const topIndex =
+        currentIndex %
+        SYMBOL_COUNT;
+
+    const middleIndex =
+        (currentIndex + 1) %
+        SYMBOL_COUNT;
+
+    const bottomIndex =
+        (currentIndex + 2) %
+        SYMBOL_COUNT;
 
     return [
-        symbolsInTrack[topIndex % symbolsInTrack.length].textContent,
-        symbolsInTrack[middleIndex % symbolsInTrack.length].textContent,
-        symbolsInTrack[bottomIndex % symbolsInTrack.length].textContent
+        symbolsInTrack[topIndex].textContent,
+        symbolsInTrack[middleIndex].textContent,
+        symbolsInTrack[bottomIndex].textContent
     ];
 }
 
@@ -162,16 +200,20 @@ function updateReel(index, timestamp) {
         data.lastTime = timestamp;
     }
 
-    const delta = (timestamp - data.lastTime) / 1000;
+    const delta =
+        (timestamp - data.lastTime) / 1000;
 
     data.lastTime = timestamp;
 
-    data.position += SPIN_SPEED * delta;
+    data.position +=
+        SPIN_SPEED * delta;
 
-    const maxPosition = 50 * SYMBOL_HEIGHT;
+    const loopDistance =
+        SYMBOL_COUNT *
+        data.symbolHeight;
 
-    if (data.position >= maxPosition) {
-        data.position -= 30 * SYMBOL_HEIGHT;
+    if (data.position >= loopDistance) {
+        data.position -= loopDistance;
     }
 
     data.track.style.transform =
@@ -195,13 +237,16 @@ function spinReel(index) {
 }
 
 function stopReel(index) {
-    if (!spinning || stopped[index]) return;
+    if (!spinning || stopped[index]) {
+        return;
+    }
 
     stopped[index] = true;
 
-    const button = document.querySelector(
-        `.stop-button[data-index="${index}"]`
-    );
+    const button =
+        document.querySelector(
+            `.stop-button[data-index="${index}"]`
+        );
 
     if (button) {
         button.disabled = true;
@@ -210,30 +255,42 @@ function stopReel(index) {
     const data = reelData[index];
 
     if (animationFrames[index]) {
-        cancelAnimationFrame(animationFrames[index]);
+        cancelAnimationFrame(
+            animationFrames[index]
+        );
+
         animationFrames[index] = null;
     }
 
-    const currentPosition = data.position;
+    const currentPosition =
+        data.position;
 
     const snappedPosition =
-        Math.round(currentPosition / SYMBOL_HEIGHT) *
-        SYMBOL_HEIGHT;
+        Math.round(
+            currentPosition /
+            data.symbolHeight
+        ) * data.symbolHeight;
 
-    data.position = snappedPosition;
+    const loopDistance =
+        SYMBOL_COUNT *
+        data.symbolHeight;
+
+    data.position =
+        snappedPosition % loopDistance;
 
     data.track.style.transition =
         "transform 0.12s cubic-bezier(0.2, 0.8, 0.3, 1)";
 
     data.track.style.transform =
-        `translateY(-${snappedPosition}px)`;
+        `translateY(-${data.position}px)`;
 
-    playSound(300 + index * 80, 0.1);
+    playSound(
+        300 + index * 80,
+        0.1
+    );
 
     setTimeout(() => {
         data.track.style.transition = "";
-
-        data.position = snappedPosition;
 
         const reel = data.reel;
 
@@ -250,10 +307,14 @@ function stopReel(index) {
 }
 
 function spin() {
-    if (spinning) return;
+    if (spinning) {
+        return;
+    }
 
     if (coin < bet) {
-        message.textContent = "COINが足りません！";
+        message.textContent =
+            "COINが足りません！";
+
         return;
     }
 
@@ -265,11 +326,14 @@ function spin() {
     playSound(180, 0.15);
 
     spinning = true;
+
     spinButton.disabled = true;
 
-    document.querySelectorAll(".symbol").forEach(symbol => {
-        symbol.classList.remove("win");
-    });
+    document
+        .querySelectorAll(".symbol")
+        .forEach(symbol => {
+            symbol.classList.remove("win");
+        });
 
     comboPopup.classList.remove(
         "show",
@@ -278,15 +342,22 @@ function spin() {
         "combo-5"
     );
 
-    message.textContent = "STOPで止めよう！";
+    message.textContent =
+        "STOPで止めよう！";
 
-    stopped = [false, false, false];
+    stopped = [
+        false,
+        false,
+        false
+    ];
 
     setupReels();
 
-    document.querySelectorAll(".stop-button").forEach(button => {
-        button.disabled = false;
-    });
+    document
+        .querySelectorAll(".stop-button")
+        .forEach(button => {
+            button.disabled = false;
+        });
 
     for (let i = 0; i < 3; i++) {
         spinReel(i);
@@ -294,12 +365,11 @@ function spin() {
 }
 
 function finishSpin() {
-    const reelElements = document.querySelectorAll(".reel");
-
     const grid = [];
 
     for (let column = 0; column < 3; column++) {
-        grid[column] = getCurrentSymbols(column);
+        grid[column] =
+            getCurrentSymbols(column);
     }
 
     checkResult(grid);
@@ -308,27 +378,41 @@ function finishSpin() {
 
     spinButton.disabled = false;
 
-    document.querySelectorAll(".stop-button").forEach(button => {
-        button.disabled = false;
-    });
+    document
+        .querySelectorAll(".stop-button")
+        .forEach(button => {
+            button.disabled = false;
+        });
 }
 
 function successEffect() {
-    const game = document.querySelector(".game");
+    const game =
+        document.querySelector(".game");
 
     game.classList.remove("shake");
+
     void game.offsetWidth;
+
     game.classList.add("shake");
 
     for (let i = 0; i < 30; i++) {
-        const spark = document.createElement("div");
+        const spark =
+            document.createElement("div");
 
         spark.className = "spark";
+
         spark.style.left = "50%";
         spark.style.top = "50%";
 
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 100 + Math.random() * 300;
+        const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+        const distance =
+            100 +
+            Math.random() *
+            300;
 
         spark.style.setProperty(
             "--x",
@@ -357,7 +441,8 @@ function checkResult(grid) {
         "💎": 500
     };
 
-    const reelElements = document.querySelectorAll(".reel");
+    const reelElements =
+        document.querySelectorAll(".reel");
 
     const lines = [
         [[0, 0], [1, 0], [2, 0]],
@@ -372,50 +457,71 @@ function checkResult(grid) {
     lines.forEach(line => {
         const [a, b, c] = line;
 
-        const symbolA = grid[a[0]][a[1]];
-        const symbolB = grid[b[0]][b[1]];
-        const symbolC = grid[c[0]][c[1]];
+        const symbolA =
+            grid[a[0]][a[1]];
+
+        const symbolB =
+            grid[b[0]][b[1]];
+
+        const symbolC =
+            grid[c[0]][c[1]];
 
         if (
             symbolA === symbolB &&
             symbolB === symbolC
         ) {
-            baseScore += scoreValues[symbolA];
+            baseScore +=
+                scoreValues[symbolA];
 
-            line.forEach(([column, row]) => {
-                const symbolsInReel =
-                    reelElements[column]
-                        .querySelectorAll(".symbol");
+            line.forEach(
+                ([column, row]) => {
+                    const data =
+                        reelData[column];
 
-                const currentIndex =
-                    Math.round(
-                        Math.abs(reelData[column].position) /
-                        SYMBOL_HEIGHT
-                    );
+                    const symbolsInReel =
+                        data.track
+                            .querySelectorAll(
+                                ".symbol"
+                            );
 
-                const actualIndex =
-                    (currentIndex + row) %
-                    symbolsInReel.length;
+                    const currentIndex =
+                        Math.round(
+                            Math.abs(
+                                data.position
+                            ) /
+                            data.symbolHeight
+                        ) %
+                        SYMBOL_COUNT;
 
-                symbolsInReel[actualIndex]
-                    .classList.add("win");
-            });
+                    const actualIndex =
+                        currentIndex + row;
+
+                    symbolsInReel[
+                        actualIndex
+                    ].classList.add("win");
+                }
+            );
         }
     });
 
     if (baseScore > 0) {
         combo++;
 
-        comboDisplay.textContent = combo;
+        comboDisplay.textContent =
+            combo;
 
         const gainedScore =
             baseScore * combo;
 
         coin += gainedScore;
-        coinDisplay.textContent = coin;
+
+        coinDisplay.textContent =
+            coin;
 
         score += gainedScore;
-        scoreDisplay.textContent = score;
+
+        scoreDisplay.textContent =
+            score;
 
         comboPopup.textContent =
             `COMBO ×${combo}`;
@@ -428,52 +534,77 @@ function checkResult(grid) {
         );
 
         if (combo >= 5) {
-            comboPopup.classList.add("combo-5");
+            comboPopup.classList.add(
+                "combo-5"
+            );
 
             const game =
-                document.querySelector(".game");
+                document.querySelector(
+                    ".game"
+                );
 
-            game.classList.remove("combo-shake");
+            game.classList.remove(
+                "combo-shake"
+            );
 
             void game.offsetWidth;
 
-            game.classList.add("combo-shake");
+            game.classList.add(
+                "combo-shake"
+            );
 
         } else if (combo >= 3) {
-            comboPopup.classList.add("combo-3");
+            comboPopup.classList.add(
+                "combo-3"
+            );
 
         } else if (combo >= 2) {
-            comboPopup.classList.add("combo-2");
+            comboPopup.classList.add(
+                "combo-2"
+            );
         }
 
         void comboPopup.offsetWidth;
 
-        comboPopup.classList.add("show");
+        comboPopup.classList.add(
+            "show"
+        );
 
         message.textContent =
             `成功！ +${gainedScore} SCORE（基本${baseScore} × COMBO${combo}）`;
 
         successEffect();
 
-        message.classList.remove("success");
+        message.classList.remove(
+            "success"
+        );
 
         void message.offsetWidth;
 
-        message.classList.add("success");
+        message.classList.add(
+            "success"
+        );
 
         const game =
-            document.querySelector(".game");
+            document.querySelector(
+                ".game"
+            );
 
-        game.classList.remove("success-flash");
+        game.classList.remove(
+            "success-flash"
+        );
 
         void game.offsetWidth;
 
-        game.classList.add("success-flash");
+        game.classList.add(
+            "success-flash"
+        );
 
     } else {
         combo = 0;
 
-        comboDisplay.textContent = combo;
+        comboDisplay.textContent =
+            combo;
 
         message.textContent =
             "もう一度チャレンジ！";
@@ -482,10 +613,14 @@ function checkResult(grid) {
 
 function toggleInfo() {
     const infoPanel =
-        document.getElementById("infoPanel");
+        document.getElementById(
+            "infoPanel"
+        );
 
     if (infoPanel) {
-        infoPanel.classList.toggle("show");
+        infoPanel.classList.toggle(
+            "show"
+        );
     }
 }
 
@@ -493,29 +628,42 @@ createReels();
 
 spinButton.disabled = false;
 
-spinButton.addEventListener("click", spin);
+spinButton.addEventListener(
+    "click",
+    spin
+);
 
-document.querySelectorAll(".stop-button").forEach(button => {
-    button.addEventListener("click", () => {
-        const index =
-            Number(button.dataset.index);
+document
+    .querySelectorAll(".stop-button")
+    .forEach(button => {
+        button.addEventListener(
+            "click",
+            () => {
+                const index =
+                    Number(
+                        button.dataset.index
+                    );
 
-        stopReel(index);
+                stopReel(index);
+            }
+        );
     });
-});
 
-betDisplay.addEventListener("click", () => {
-    if (bet === 10) {
-        bet = 20;
-    } else if (bet === 20) {
-        bet = 30;
-    } else if (bet === 30) {
-        bet = 40;
-    } else if (bet === 40) {
-        bet = 50;
-    } else {
-        bet = 10;
+betDisplay.addEventListener(
+    "click",
+    () => {
+        if (bet === 10) {
+            bet = 20;
+        } else if (bet === 20) {
+            bet = 30;
+        } else if (bet === 30) {
+            bet = 40;
+        } else if (bet === 40) {
+            bet = 50;
+        } else {
+            bet = 10;
+        }
+
+        betValue.textContent = bet;
     }
-
-    betValue.textContent = bet;
-});
+);
