@@ -37,11 +37,6 @@ h1 {
         0 0 15px #888;
 }
 
-
-/* =========================
-   STATS
-========================= */
-
 .stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -104,11 +99,6 @@ h1 {
     transform: scale(0.95);
 }
 
-
-/* =========================
-   REELS
-========================= */
-
 .reels {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -168,33 +158,12 @@ h1 {
     border-bottom: none;
 }
 
-
-/* =========================
-   SPINNING
-========================= */
-
 .reel.spinning {
     animation: reelShake 0.08s infinite;
 }
 
 .reel.spinning .symbol {
-    animation: reelSpin 0.08s linear infinite;
     filter: blur(2px);
-    transform: scaleY(0.9);
-}
-
-@keyframes reelSpin {
-    0% {
-        transform: translateY(-20px);
-    }
-
-    50% {
-        transform: translateY(20px);
-    }
-
-    100% {
-        transform: translateY(-20px);
-    }
 }
 
 @keyframes reelShake {
@@ -210,11 +179,6 @@ h1 {
         transform: translateY(-2px);
     }
 }
-
-
-/* =========================
-   REEL STOP
-========================= */
 
 .reel.stop {
     animation: stopReel 0.15s ease-out;
@@ -260,11 +224,6 @@ h1 {
     }
 }
 
-
-/* =========================
-   WIN
-========================= */
-
 .symbol.win {
     animation: winFlash 0.5s ease-in-out infinite alternate;
 
@@ -287,11 +246,6 @@ h1 {
         filter: brightness(1.8);
     }
 }
-
-
-/* =========================
-   STOP BUTTONS
-========================= */
 
 .stop-buttons {
     display: grid;
@@ -334,10 +288,6 @@ h1 {
 }
 
 
-/* =========================
-   MESSAGE
-========================= */
-
 .message {
     height: 45px;
     margin: 22px 0;
@@ -369,11 +319,6 @@ h1 {
         transform: scale(1);
     }
 }
-
-
-/* =========================
-   SPIN BUTTON
-========================= */
 
 #spinButton {
     width: 280px;
@@ -424,11 +369,6 @@ h1 {
     transform: none;
     box-shadow: 0 3px 0 #111;
 }
-
-
-/* =========================
-   COMBO POPUP
-========================= */
 
 .combo-popup {
     position: fixed;
@@ -535,11 +475,6 @@ h1 {
     animation-duration: 1.2s !important;
 }
 
-
-/* =========================
-   SUCCESS EFFECTS
-========================= */
-
 .success-flash {
     animation: successFlash 0.5s ease;
 }
@@ -618,11 +553,6 @@ h1 {
     }
 }
 
-
-/* =========================
-   SPARK
-========================= */
-
 .spark {
     position: fixed;
 
@@ -651,11 +581,6 @@ h1 {
         opacity: 0;
     }
 }
-
-
-/* =========================
-   EXTRA BUTTONS
-========================= */
 
 .extra-buttons {
     display: flex;
@@ -698,11 +623,6 @@ h1 {
     cursor: not-allowed;
 }
 
-
-/* =========================
-   INFO PANEL
-========================= */
-
 .info-panel {
     display: none;
 
@@ -731,11 +651,6 @@ h1 {
     margin: 8px 0;
     font-size: 18px;
 }
-
-
-/* =========================
-   MOBILE
-========================= */
 
 @media (max-width: 700px) {
     .game {
