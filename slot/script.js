@@ -240,6 +240,9 @@ function updateReel(index, timestamp) {
     data.track.style.transform =
         `translate3d(0, -${data.position}px, 0)`;
 
+    data.track.style.filter =
+        "blur(2px)";
+
     animationFrames[index] =
         requestAnimationFrame(time => {
             updateReel(index, time);
@@ -263,6 +266,8 @@ function stopReel(index) {
     }
 
     const data = reelData[index];
+
+    data.track.style.filter = "blur(0)";
 
     if (animationFrames[index] !== null) {
         cancelAnimationFrame(
