@@ -22,161 +22,80 @@ let resultFinished = false;
 let reelData = [];
 let animationFrames = [null, null, null];
 
-const SPIN_SPEED =
-    window.innerWidth <= 700
-        ? 600
-        : 800;
+const betSettings = {
+    10: {
+        speed: 800,
+        glow: false,
+        shake: false,
+        flash: false
+    },
+    20: {
+        speed: 700,
+        glow: true,
+        shake: false,
+        flash: false
+    },
+    30: {
+        speed: 600,
+        glow: true,
+        shake: true,
+        flash: false
+    },
+    40: {
+        speed: 500,
+        glow: true,
+        shake: true,
+        flash: true
+    },
+    50: {
+        speed: 400,
+        glow: true,
+        shake: true,
+        flash: true
+    }
+};
 
 const SYMBOL_COUNT = 20;
 
 const reelSymbols = [
     [
-        "🍒",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍉",
-        "🍋",
-        "BAR",
-        "🍒",
-        "🔔",
-        "🍋",
-        "🍉",
-        "🍒",
-        "7️⃣",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍉",
-        "🍋",
-        "BAR",
-        "🍒"
+        "🍒","🍋","🔔","🍒","🍉","🍋","BAR","🍒","🔔","🍋",
+        "🍉","🍒","7️⃣","🍋","🔔","🍒","🍉","🍋","BAR","🍒"
     ],
-
     [
-        "🍋",
-        "🍒",
-        "🔔",
-        "🍉",
-        "🍒",
-        "🍋",
-        "BAR",
-        "🍒",
-        "🍉",
-        "🔔",
-        "🍋",
-        "🍒",
-        "7️⃣",
-        "🍉",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍉",
-        "🍋",
-        "🍒"
+        "🍋","🍒","🔔","🍉","🍒","🍋","BAR","🍒","🍉","🔔",
+        "🍋","🍒","7️⃣","🍉","🍋","🔔","🍒","🍉","🍋","🍒"
     ],
-
     [
-        "🍒",
-        "🍉",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍋",
-        "BAR",
-        "🍉",
-        "🍒",
-        "🔔",
-        "🍋",
-        "🍒",
-        "7️⃣",
-        "🍉",
-        "🍋",
-        "🍒",
-        "🔔",
-        "🍋",
-        "🍉",
-        "🍒"
+        "🍒","🍉","🍋","🔔","🍒","🍋","BAR","🍉","🍒","🔔",
+        "🍋","🍒","7️⃣","🍉","🍋","🍒","🔔","🍋","🍉","🍒"
     ]
 ];
 
-function playSound(
-    frequency,
-    duration,
-    type = "square"
-) {
-    if (!audioContext) {
-        audioContext =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
-    }
+const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 4, 8],
+    [6, 4, 2]
+];
 
-    audioContext.resume();
+const scoreValues = {
+    "7️⃣": 100,
+    "BAR": 60,
+    "🔔": 40,
+    "🍉": 30,
+    "🍒": 20
+};
 
-    const oscillator =
-        audioContext.createOscillator();
-
-    const gain =
-        audioContext.createGain();
-
-    oscillator.frequency.value =
-        frequency;
-
-    oscillator.type = type;
-
-    gain.gain.setValueAtTime(
-        0.08,
-        audioContext.currentTime
-    );
-
-    gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        audioContext.currentTime + duration
-    );
-
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-
-    oscillator.start();
-
-    oscillator.stop(
-        audioContext.currentTime +
-        duration
-    );
-}
-
-function playWinSound() {
-    if (!audioContext) {
-        audioContext =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
-    }
-
-    audioContext.resume();
-
-    const notes = [
-        523,
-        659,
-        784,
-        1046
-    ];
-
-    notes.forEach(
-        (frequency, index) => {
-            setTimeout(() => {
-                playSound(
-                    frequency,
-                    0.18,
-                    "square"
-                );
-            }, index * 90);
-        }
-    );
-}
+const resultNames = {
+    "7️⃣": "7",
+    "BAR": "BAR",
+    "🔔": "BELL",
+    "🍉": "WATERMELON",
+    "🍋": "LEMON",
+    "🍒": "CHERRY"
+};
 
 function copyArray(array) {
     return [...array];
@@ -184,331 +103,186 @@ function copyArray(array) {
 
 function createReels() {
     reels.innerHTML = "";
+    reelData = [];
 
-    for (
-        let column = 0;
-        column < 3;
-        column++
-    ) {
-        const reel =
-            document.createElement("div");
-
+    for (let i = 0; i < 3; i++) {
+        const reel = document.createElement("div");
         reel.className = "reel";
 
-        const track =
-            document.createElement("div");
+        const strip = document.createElement("div");
+        strip.className = "reel-strip";
 
-        track.className = "reel-track";
+        const symbols = [];
 
-        const fixedSymbols =
-            copyArray(
-                reelSymbols[column]
-            );
+        const base = copyArray(reelSymbols[i]);
 
-        for (
-            let repeat = 0;
-            repeat < 3;
-            repeat++
-        ) {
-            fixedSymbols.forEach(
-                symbolText => {
-                    const symbol =
-                        document.createElement(
-                            "div"
-                        );
-
-                    symbol.className =
-                        "symbol";
-
-                    symbol.textContent =
-                        symbolText;
-
-                    track.appendChild(
-                        symbol
-                    );
-                }
-            );
+        for (let repeat = 0; repeat < 3; repeat++) {
+            symbols.push(...base);
         }
 
-        reel.appendChild(track);
+        symbols.forEach(symbol => {
+            const item = document.createElement("div");
+            item.className = "symbol";
+            item.textContent = symbol;
+            strip.appendChild(item);
+        });
+
+        reel.appendChild(strip);
         reels.appendChild(reel);
+
+        reelData.push({
+            reel,
+            strip,
+            symbols,
+            position: SYMBOL_COUNT,
+            targetPosition: SYMBOL_COUNT,
+            stopping: false
+        });
     }
+}
 
-    requestAnimationFrame(() => {
-        document
-            .querySelectorAll(".reel")
-            .forEach(reel => {
-                const symbolHeight =
-                    reel.clientHeight / 3;
+function getCurrentSymbols() {
+    return reelData.map(data => {
+        const index =
+            Math.round(data.position) % SYMBOL_COUNT;
 
-                reel
-                    .querySelectorAll(".symbol")
-                    .forEach(symbol => {
-                        symbol.style.height =
-                            `${symbolHeight}px`;
-
-                        symbol.style.minHeight =
-                            `${symbolHeight}px`;
-                    });
-            });
+        return data.symbols[index + SYMBOL_COUNT];
     });
 }
 
-function setupReels() {
-    reelData = [];
+function updateReel(index) {
+    const data = reelData[index];
 
-    const reelElements =
-        document.querySelectorAll(".reel");
-
-    reelElements.forEach(
-        (reel, index) => {
-            const track =
-                reel.querySelector(
-                    ".reel-track"
-                );
-
-            const symbolHeight =
-                reel.clientHeight / 3;
-
-            const startIndex =
-                Math.floor(
-                    Math.random() *
-                    SYMBOL_COUNT
-                );
-
-            const startPosition =
-                startIndex *
-                symbolHeight;
-
-            reelData[index] = {
-                reel: reel,
-                track: track,
-                position: startPosition,
-                lastTime: null,
-                symbolHeight:
-                    symbolHeight
-            };
-
-            track.style.transition = "";
-
-            track.style.transform =
-                `translate3d(0, -${startPosition}px, 0)`;
-
-            track.style.filter =
-                "blur(0)";
-        }
-    );
-}
-
-function getCurrentSymbols(index) {
-    const data =
-        reelData[index];
-
-    const symbolsInTrack =
-        data.track.querySelectorAll(
-            ".symbol"
-        );
-
-    const currentIndex =
-        Math.round(
-            Math.abs(
-                data.position
-            ) /
-            data.symbolHeight
-        );
-
-    const topIndex =
-        currentIndex %
-        SYMBOL_COUNT;
-
-    const middleIndex =
-        (currentIndex + 1) %
-        SYMBOL_COUNT;
-
-    const bottomIndex =
-        (currentIndex + 2) %
-        SYMBOL_COUNT;
-
-    return [
-        symbolsInTrack[
-            topIndex
-        ].textContent,
-
-        symbolsInTrack[
-            middleIndex
-        ].textContent,
-
-        symbolsInTrack[
-            bottomIndex
-        ].textContent
-    ];
+    data.strip.style.transform =
+        `translate3d(0, ${-data.position * 80}px, 0)`;
 }
 
 function spinReel(index) {
-    const data =
-        reelData[index];
+    const data = reelData[index];
 
-    data.lastTime = null;
-
-    animationFrames[index] =
-        requestAnimationFrame(
-            time => {
-                updateReel(
-                    index,
-                    time
-                );
-            }
-        );
-}
-
-function updateReel(
-    index,
-    timestamp
-) {
-    if (
-        !spinning ||
-        stopped[index]
-    ) {
+    if (stopped[index]) {
         return;
     }
 
-    const data =
-        reelData[index];
+    const settings = betSettings[bet];
 
-    if (
-        data.lastTime === null
-    ) {
-        data.lastTime =
-            timestamp;
+    const speed = 80 / settings.speed * 16.67;
+
+    data.position += speed;
+
+    if (data.position >= SYMBOL_COUNT * 2) {
+        data.position -= SYMBOL_COUNT;
     }
 
-    const delta =
-        (
-            timestamp -
-            data.lastTime
-        ) / 1000;
-
-    data.lastTime =
-        timestamp;
-
-    data.position +=
-        SPIN_SPEED *
-        delta;
-
-    const loopDistance =
-        SYMBOL_COUNT *
-        data.symbolHeight;
-
-    if (
-        data.position >=
-        loopDistance
-    ) {
-        data.position -=
-            loopDistance;
-    }
-
-    data.track.style.transform =
-        `translate3d(0, -${data.position}px, 0)`;
-
-    data.track.style.filter =
-        "blur(2px)";
+    updateReel(index);
 
     animationFrames[index] =
-        requestAnimationFrame(
-            time => {
-                updateReel(
-                    index,
-                    time
-                );
-            }
-        );
+        requestAnimationFrame(() => spinReel(index));
 }
 
 function stopReel(index) {
-    if (
-        !spinning ||
-        stopped[index]
-    ) {
+    if (!spinning || stopped[index]) {
         return;
     }
 
     stopped[index] = true;
 
-    const button =
-        document.querySelector(
-            `.stop-button[data-index="${index}"]`
-        );
-
-    if (button) {
-        button.disabled = true;
+    if (animationFrames[index]) {
+        cancelAnimationFrame(animationFrames[index]);
+        animationFrames[index] = null;
     }
 
-    const data =
-        reelData[index];
+    const data = reelData[index];
 
-    data.track.style.filter =
-        "blur(0)";
+    const nearest =
+        Math.round(data.position);
 
-    if (
-        animationFrames[index] !==
-        null
-    ) {
-        cancelAnimationFrame(
-            animationFrames[index]
-        );
+    data.position = nearest;
 
-        animationFrames[index] =
-            null;
-    }
+    data.strip.style.transition =
+        "transform 0.22s cubic-bezier(.2,.8,.2,1)";
 
-    const snappedPosition =
-        Math.round(
-            data.position /
-            data.symbolHeight
-        ) *
-        data.symbolHeight;
-
-    const loopDistance =
-        SYMBOL_COUNT *
-        data.symbolHeight;
-
-    data.position =
-        snappedPosition %
-        loopDistance;
-
-    data.track.style.transition =
-        "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
-
-    data.track.style.transform =
-        `translate3d(0, -${data.position}px, 0)`;
-
-    playSound(
-        280 + index * 80,
-        0.1
-    );
+    updateReel(index);
 
     setTimeout(() => {
-        data.track.style.transition =
-            "";
+        data.strip.style.transition = "";
 
-        data.reel.classList.add(
-            "stopped"
-        );
-
-        setTimeout(() => {
-            data.reel.classList.remove(
-                "stopped"
-            );
-        }, 350);
-
-        if (
-            stopped.every(
-                value => value
-            )
-        ) {
+        if (stopped.every(value => value)) {
             finishSpin();
         }
     }, 230);
+}
+
+function playSound(type) {
+    if (!audioContext) {
+        audioContext =
+            new (window.AudioContext ||
+            window.webkitAudioContext)();
+    }
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    if (type === "spin") {
+        oscillator.frequency.value = 180;
+        gain.gain.value = 0.04;
+    }
+
+    if (type === "stop") {
+        oscillator.frequency.value = 320;
+        gain.gain.value = 0.08;
+    }
+
+    if (type === "win") {
+        oscillator.frequency.value = 700;
+        gain.gain.value = 0.12;
+    }
+
+    if (type === "bonus") {
+        oscillator.frequency.value = 1000;
+        gain.gain.value = 0.15;
+    }
+
+    oscillator.type = "square";
+
+    oscillator.start();
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + 0.18
+    );
+
+    oscillator.stop(
+        audioContext.currentTime + 0.18
+    );
+}
+
+function applyBetEffect() {
+    const settings = betSettings[bet];
+
+    reels.classList.remove(
+        "bet-glow",
+        "bet-shake",
+        "bet-flash"
+    );
+
+    if (settings.glow) {
+        reels.classList.add("bet-glow");
+    }
+
+    if (settings.shake) {
+        reels.classList.add("bet-shake");
+    }
+
+    if (settings.flash) {
+        reels.classList.add("bet-flash");
+    }
 }
 
 function spin() {
@@ -517,76 +291,42 @@ function spin() {
     }
 
     if (coin < bet) {
-        message.textContent =
-            "COINが足りません！";
-
-        playSound(
-            120,
-            0.2,
-            "sawtooth"
-        );
-
+        message.textContent = "COINが足りません！";
         return;
     }
 
-    coin -= bet;
-
-    coinDisplay.textContent =
-        coin;
-
-    if (!audioContext) {
-        audioContext =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
-    }
-
-    audioContext.resume();
-
-    playSound(
-        180,
-        0.15
-    );
-
     spinning = true;
+    stopped = [false, false, false];
     resultFinished = false;
 
-    spinButton.disabled = true;
+    coin -= bet;
 
-    document
-        .querySelectorAll(".symbol")
-        .forEach(symbol => {
-            symbol.classList.remove(
-                "win"
-            );
-        });
+    coinDisplay.textContent = coin;
 
     message.textContent =
-        "STOPで止めよう！";
+        `BET ${bet}｜3つのSTOPで止めよう！`;
 
-    stopped = [
-        false,
-        false,
-        false
-    ];
+    reels.classList.remove(
+        "success-shake",
+        "success-glow",
+        "flash"
+    );
 
-    setupReels();
+    applyBetEffect();
 
-    document
-        .querySelectorAll(
-            ".stop-button"
-        )
-        .forEach(button => {
-            button.disabled =
-                false;
-        });
+    playSound("spin");
 
-    for (
-        let i = 0;
-        i < 3;
-        i++
-    ) {
+    for (let i = 0; i < 3; i++) {
+        reelData[i].strip.style.transition = "";
+
+        const randomStart =
+            Math.floor(Math.random() * SYMBOL_COUNT);
+
+        reelData[i].position =
+            SYMBOL_COUNT + randomStart;
+
+        updateReel(i);
+
         spinReel(i);
     }
 }
@@ -597,238 +337,37 @@ function finishSpin() {
     }
 
     resultFinished = true;
-
-    const grid = [];
-
-    for (
-        let column = 0;
-        column < 3;
-        column++
-    ) {
-        grid[column] =
-            getCurrentSymbols(
-                column
-            );
-    }
-
-    checkResult(grid);
-
     spinning = false;
 
-    spinButton.disabled =
-        false;
-
-    document
-        .querySelectorAll(
-            ".stop-button"
-        )
-        .forEach(button => {
-            button.disabled =
-                false;
-        });
+    checkResult();
 }
 
-function highlightLine(line) {
-    line.forEach(
-        ([column, row]) => {
-            const data =
-                reelData[column];
+function checkResult() {
+    const symbols = getCurrentSymbols();
 
-            const symbolsInReel =
-                data.track.querySelectorAll(
-                    ".symbol"
-                );
-
-            const currentIndex =
-                Math.round(
-                    Math.abs(
-                        data.position
-                    ) /
-                    data.symbolHeight
-                ) %
-                SYMBOL_COUNT;
-
-            const actualIndex =
-                currentIndex + row;
-
-            const symbol =
-                symbolsInReel[
-                    actualIndex
-                ];
-
-            if (symbol) {
-                symbol.classList.add(
-                    "win"
-                );
-            }
-        }
-    );
-}
-
-function successEffect() {
-    const game =
-        document.querySelector(
-            ".game"
-        );
-
-    game.classList.remove(
-        "shake"
-    );
-
-    void game.offsetWidth;
-
-    game.classList.add(
-        "shake"
-    );
-
-    game.classList.remove(
-        "success-flash"
-    );
-
-    void game.offsetWidth;
-
-    game.classList.add(
-        "success-flash"
-    );
-
-    for (
-        let i = 0;
-        i < 35;
-        i++
-    ) {
-        const spark =
-            document.createElement(
-                "div"
-            );
-
-        spark.className =
-            "spark";
-
-        spark.style.left =
-            "50%";
-
-        spark.style.top =
-            "50%";
-
-        const angle =
-            Math.random() *
-            Math.PI *
-            2;
-
-        const distance =
-            100 +
-            Math.random() *
-            300;
-
-        spark.style.setProperty(
-            "--x",
-            `${Math.cos(angle) * distance}px`
-        );
-
-        spark.style.setProperty(
-            "--y",
-            `${Math.sin(angle) * distance}px`
-        );
-
-        document.body.appendChild(
-            spark
-        );
-
-        setTimeout(() => {
-            spark.remove();
-        }, 800);
-    }
-}
-
-function checkResult(grid) {
-    const scoreValues = {
-        "7️⃣": 100,
-        "BAR": 60,
-        "🔔": 40,
-        "🍉": 30,
-        "🍒": 20
-    };
-
-    const resultNames = {
-        "7️⃣": "大当たり！",
-        "BAR": "中当たり！",
-        "🔔": "小当たり！",
-        "🍉": "小当たり！",
-        "🍒": "当たり！"
-    };
-
-    const lines = [
-        [
-            [0, 0],
-            [1, 0],
-            [2, 0]
-        ],
-        [
-            [0, 1],
-            [1, 1],
-            [2, 1]
-        ],
-        [
-            [0, 2],
-            [1, 2],
-            [2, 2]
-        ],
-        [
-            [0, 0],
-            [1, 1],
-            [2, 2]
-        ],
-        [
-            [2, 0],
-            [1, 1],
-            [0, 2]
-        ]
-    ];
-
-    let baseScore = 0;
+    let totalScore = 0;
     let bonus = false;
-    let resultText = "";
+    let winningLines = [];
 
-    lines.forEach(line => {
-        const [a, b, c] =
-            line;
-
-        const symbolA =
-            grid[a[0]][a[1]];
-
-        const symbolB =
-            grid[b[0]][b[1]];
-
-        const symbolC =
-            grid[c[0]][c[1]];
+    lines.forEach((line, index) => {
+        const values = line.map(position => {
+            const reelIndex = position % 3;
+            return symbols[reelIndex];
+        });
 
         if (
-            symbolA === symbolB &&
-            symbolB === symbolC
+            values[0] === values[1] &&
+            values[1] === values[2]
         ) {
-            highlightLine(line);
-
-            if (
-                symbolA === "🍋"
-            ) {
+            if (values[0] === "🍋") {
                 bonus = true;
+                winningLines.push(index);
                 return;
             }
 
-            if (
-                scoreValues[
-                    symbolA
-                ]
-            ) {
-                baseScore +=
-                    scoreValues[
-                        symbolA
-                    ];
-
-                resultText =
-                    resultNames[
-                        symbolA
-                    ];
+            if (scoreValues[values[0]]) {
+                totalScore += scoreValues[values[0]];
+                winningLines.push(index);
             }
         }
     });
@@ -839,105 +378,129 @@ function checkResult(grid) {
         score += bonusScore;
         coin += bonusScore;
 
-        scoreDisplay.textContent =
-            score;
-
-        coinDisplay.textContent =
-            coin;
+        scoreDisplay.textContent = score;
+        coinDisplay.textContent = coin;
 
         message.textContent =
-            `🍋 BONUS！ +${bonusScore} SCORE`;
+            "🍋 BONUS！ +50 SCORE";
 
-        playWinSound();
-        successEffect();
+        playSound("bonus");
+
+        successEffect(winningLines);
 
         return;
     }
 
-    if (baseScore > 0) {
-        score += baseScore;
-        coin += baseScore;
+    if (totalScore > 0) {
+        score += totalScore;
+        coin += totalScore;
 
-        scoreDisplay.textContent =
-            score;
-
-        coinDisplay.textContent =
-            coin;
+        scoreDisplay.textContent = score;
+        coinDisplay.textContent = coin;
 
         message.textContent =
-            `${resultText} +${baseScore} SCORE`;
+            `🎉 ${totalScore} SCORE GET！`;
 
-        playWinSound();
-        successEffect();
+        playSound("win");
+
+        successEffect(winningLines);
 
         return;
     }
 
-    message.textContent =
-        "もう一度チャレンジ！";
+    message.textContent = "MISS...";
 
-    playSound(
-        160,
-        0.12,
-        "triangle"
+    playSound("stop");
+
+    reels.classList.remove(
+        "bet-glow",
+        "bet-shake",
+        "bet-flash"
     );
 }
 
-function toggleInfo() {
-    infoPanel.classList.toggle(
-        "show"
-    );
+function highlightLine(lineIndex) {
+    const line = lines[lineIndex];
+
+    line.forEach(position => {
+        const reelIndex = position % 3;
+
+        const reel = reelData[reelIndex].reel;
+
+        reel.classList.add("winning");
+
+        setTimeout(() => {
+            reel.classList.remove("winning");
+        }, 700);
+    });
 }
 
-createReels();
+function successEffect(winningLines) {
+    reels.classList.add("success-shake");
+    reels.classList.add("success-glow");
 
-spinButton.disabled =
-    false;
+    const settings = betSettings[bet];
 
-spinButton.addEventListener(
-    "click",
-    spin
-);
+    if (settings.flash) {
+        reels.classList.add("flash");
+    }
 
-document
-    .querySelectorAll(
-        ".stop-button"
-    )
-    .forEach(button => {
-        button.addEventListener(
-            "click",
-            () => {
-                const index =
-                    Number(
-                        button.dataset.index
-                    );
-
-                stopReel(index);
-            }
-        );
+    winningLines.forEach((lineIndex, i) => {
+        setTimeout(() => {
+            highlightLine(lineIndex);
+        }, i * 120);
     });
 
-betDisplay.addEventListener(
-    "click",
-    () => {
-        if (bet === 10) {
-            bet = 20;
-        } else if (bet === 20) {
-            bet = 30;
-        } else if (bet === 30) {
-            bet = 40;
-        } else if (bet === 40) {
-            bet = 50;
-        } else {
-            bet = 10;
-        }
+    setTimeout(() => {
+        reels.classList.remove(
+            "success-shake",
+            "success-glow",
+            "flash",
+            "bet-glow",
+            "bet-shake",
+            "bet-flash"
+        );
+    }, 900);
+}
 
-        betValue.textContent =
-            bet;
+betDisplay.addEventListener("click", () => {
+    if (spinning) {
+        return;
     }
-);
 
-infoButton.addEventListener(
-    "click",
-    toggleInfo
-);
+    const values = [10, 20, 30, 40, 50];
+
+    const currentIndex =
+        values.indexOf(bet);
+
+    const nextIndex =
+        (currentIndex + 1) % values.length;
+
+    bet = values[nextIndex];
+
+    betValue.textContent = bet;
+
+    message.textContent =
+        `BET ${bet}｜${betSettings[bet].speed}ms`;
+});
+
+spinButton.addEventListener("click", spin);
+
+document.querySelectorAll(".stop-button").forEach(button => {
+    button.addEventListener("click", () => {
+        const index =
+            Number(button.dataset.index);
+
+        stopReel(index);
+
+        if (spinning) {
+            playSound("stop");
+        }
+    });
+});
+
+infoButton.addEventListener("click", () => {
+    infoPanel.classList.toggle("show");
+});
+
+createReels();
