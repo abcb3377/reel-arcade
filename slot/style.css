@@ -176,6 +176,11 @@ body {
     justify-content: center;
     font-size: clamp(38px, 8vw, 58px);
     font-weight: bold;
+    font-family:
+        "Segoe UI Emoji",
+        "Noto Color Emoji",
+        Arial,
+        sans-serif;
     user-select: none;
     text-shadow:
         0 3px 5px rgba(0, 0, 0, 0.7);
@@ -324,14 +329,6 @@ body {
 .score-value {
     text-align: right;
     white-space: nowrap;
-}
-
-.score-value.bonus {
-    color: #ffe600;
-    text-shadow:
-        0 0 5px #ffd000,
-        0 0 10px #ffd000,
-        0 0 20px #ffd700;
 }
 
 .reel.stopped {
@@ -564,4 +561,12 @@ body {
     background: #555555;
     box-shadow:
         0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+.score-value.bonus {
+    color: #ffe600;
+    text-shadow:
+        0 0 5px #ffd000,
+        0 0 10px #ffd000,
+        0 0 20px #ffb700;
 }
