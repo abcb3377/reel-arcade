@@ -178,7 +178,7 @@ function playWinSound() {
     );
 }
 
-function shuffleCopy(array) {
+function copyArray(array) {
     return [...array];
 }
 
@@ -201,7 +201,7 @@ function createReels() {
         track.className = "reel-track";
 
         const fixedSymbols =
-            shuffleCopy(
+            copyArray(
                 reelSymbols[column]
             );
 
@@ -742,11 +742,11 @@ function successEffect() {
 
 function checkResult(grid) {
     const scoreValues = {
-        "7️⃣": 500,
-        "BAR": 300,
-        "🔔": 200,
-        "🍉": 150,
-        "🍒": 100
+        "7️⃣": 100,
+        "BAR": 60,
+        "🔔": 40,
+        "🍉": 30,
+        "🍒": 20
     };
 
     const resultNames = {
@@ -834,14 +834,10 @@ function checkResult(grid) {
     });
 
     if (bonus) {
-        const bonusScore =
-            250;
+        const bonusScore = 50;
 
-        score +=
-            bonusScore;
-
-        coin +=
-            bonusScore;
+        score += bonusScore;
+        coin += bonusScore;
 
         scoreDisplay.textContent =
             score;
@@ -853,18 +849,14 @@ function checkResult(grid) {
             `🍋 BONUS！ +${bonusScore} SCORE`;
 
         playWinSound();
-
         successEffect();
 
         return;
     }
 
     if (baseScore > 0) {
-        score +=
-            baseScore;
-
-        coin +=
-            baseScore;
+        score += baseScore;
+        coin += baseScore;
 
         scoreDisplay.textContent =
             score;
@@ -876,7 +868,6 @@ function checkResult(grid) {
             `${resultText} +${baseScore} SCORE`;
 
         playWinSound();
-
         successEffect();
 
         return;
