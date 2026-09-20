@@ -2,8 +2,6 @@ const reels = document.getElementById("reels");
 const scoreDisplay = document.getElementById("score");
 const message = document.getElementById("message");
 const spinButton = document.getElementById("spinButton");
-const infoButton = document.getElementById("infoButton");
-const infoPanel = document.getElementById("infoPanel");
 
 let audioContext = null;
 
@@ -23,75 +21,27 @@ const SPIN_SPEED =
 
 const SYMBOL_COUNT = 20;
 
-const reelSymbols = [
-    [
-        "🍒",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍉",
-        "🍋",
-        "BAR",
-        "🍒",
-        "🔔",
-        "🍋",
-        "🍉",
-        "🍒",
-        "7️⃣",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍉",
-        "🍋",
-        "BAR",
-        "🍒"
-    ],
-
-    [
-        "🍋",
-        "🍒",
-        "🔔",
-        "🍉",
-        "🍒",
-        "🍋",
-        "BAR",
-        "🍒",
-        "🍉",
-        "🔔",
-        "🍋",
-        "🍒",
-        "7️⃣",
-        "🍉",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍉",
-        "🍋",
-        "🍒"
-    ],
-
-    [
-        "🍒",
-        "🍉",
-        "🍋",
-        "🔔",
-        "🍒",
-        "🍋",
-        "BAR",
-        "🍉",
-        "🍒",
-        "🔔",
-        "🍋",
-        "🍒",
-        "7️⃣",
-        "🍉",
-        "🍋",
-        "🍒",
-        "🔔",
-        "🍋",
-        "🍉",
-        "🍒"
-    ]
+const baseSymbols = [
+    "🍒",
+    "🍋",
+    "🔔",
+    "🍒",
+    "🍉",
+    "🍋",
+    "🍒",
+    "🔔",
+    "🍋",
+    "🍉",
+    "🍒",
+    "🍋",
+    "🍉",
+    "🔔",
+    "🍒",
+    "🍋",
+    "🍉",
+    "🍒",
+    "🍋",
+    "🍒"
 ];
 
 function playSound(
@@ -118,7 +68,8 @@ function playSound(
     oscillator.frequency.value =
         frequency;
 
-    oscillator.type = type;
+    oscillator.type =
+        type;
 
     gain.gain.setValueAtTime(
         0.08,
@@ -127,11 +78,14 @@ function playSound(
 
     gain.gain.exponentialRampToValueAtTime(
         0.001,
-        audioContext.currentTime + duration
+        audioContext.currentTime +
+        duration
     );
 
     oscillator.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(
+        audioContext.destination
+    );
 
     oscillator.start();
 
@@ -182,7 +136,8 @@ function shuffleCopy(array) {
     ) {
         const j =
             Math.floor(
-                Math.random() * (i + 1)
+                Math.random() *
+                (i + 1)
             );
 
         [
@@ -197,6 +152,16 @@ function shuffleCopy(array) {
     return result;
 }
 
+function createRandomSymbols() {
+    const symbols = [
+        ...baseSymbols,
+        "7️⃣",
+        "BAR"
+    ];
+
+    return shuffleCopy(symbols);
+}
+
 function createReels() {
     reels.innerHTML = "";
 
@@ -208,24 +173,24 @@ function createReels() {
         const reel =
             document.createElement("div");
 
-        reel.className = "reel";
+        reel.className =
+            "reel";
 
         const track =
             document.createElement("div");
 
-        track.className = "reel-track";
+        track.className =
+            "reel-track";
 
-        const fixedSymbols =
-            shuffleCopy(
-                reelSymbols[column]
-            );
+        const randomSymbols =
+            createRandomSymbols();
 
         for (
             let repeat = 0;
             repeat < 3;
             repeat++
         ) {
-            fixedSymbols.forEach(
+            randomSymbols.forEach(
                 symbolText => {
                     const symbol =
                         document.createElement(
@@ -253,17 +218,22 @@ function createReels() {
         document
             .querySelectorAll(".reel")
             .forEach(reel => {
+
                 const symbolHeight =
                     reel.clientHeight / 3;
 
                 reel
-                    .querySelectorAll(".symbol")
+                    .querySelectorAll(
+                        ".symbol"
+                    )
                     .forEach(symbol => {
+
                         symbol.style.height =
                             `${symbolHeight}px`;
 
                         symbol.style.minHeight =
                             `${symbolHeight}px`;
+
                     });
             });
     });
@@ -273,10 +243,13 @@ function setupReels() {
     reelData = [];
 
     const reelElements =
-        document.querySelectorAll(".reel");
+        document.querySelectorAll(
+            ".reel"
+        );
 
     reelElements.forEach(
         (reel, index) => {
+
             const track =
                 reel.querySelector(
                     ".reel-track"
@@ -298,13 +271,15 @@ function setupReels() {
             reelData[index] = {
                 reel: reel,
                 track: track,
-                position: startPosition,
+                position:
+                    startPosition,
                 lastTime: null,
                 symbolHeight:
                     symbolHeight
             };
 
-            track.style.transition = "";
+            track.style.transition =
+                "";
 
             track.style.transform =
                 `translate3d(0, -${startPosition}px, 0)`;
@@ -337,11 +312,15 @@ function getCurrentSymbols(index) {
         SYMBOL_COUNT;
 
     const middleIndex =
-        (currentIndex + 1) %
+        (
+            currentIndex + 1
+        ) %
         SYMBOL_COUNT;
 
     const bottomIndex =
-        (currentIndex + 2) %
+        (
+            currentIndex + 2
+        ) %
         SYMBOL_COUNT;
 
     return [
@@ -503,6 +482,7 @@ function stopReel(index) {
     );
 
     setTimeout(() => {
+
         data.track.style.transition =
             "";
 
@@ -523,6 +503,7 @@ function stopReel(index) {
         ) {
             finishSpin();
         }
+
     }, 230);
 }
 
@@ -568,24 +549,30 @@ function spin() {
         false
     ];
 
-    setupReels();
+    createReels();
 
-    document
-        .querySelectorAll(
-            ".stop-button"
-        )
-        .forEach(button => {
-            button.disabled =
-                false;
-        });
+    requestAnimationFrame(() => {
 
-    for (
-        let i = 0;
-        i < 3;
-        i++
-    ) {
-        spinReel(i);
-    }
+        setupReels();
+
+        document
+            .querySelectorAll(
+                ".stop-button"
+            )
+            .forEach(button => {
+                button.disabled =
+                    false;
+            });
+
+        for (
+            let i = 0;
+            i < 3;
+            i++
+        ) {
+            spinReel(i);
+        }
+
+    });
 }
 
 function finishSpin() {
@@ -628,6 +615,7 @@ function finishSpin() {
 function highlightLine(line) {
     line.forEach(
         ([column, row]) => {
+
             const data =
                 reelData[column];
 
@@ -787,6 +775,7 @@ function checkResult(grid) {
     let resultText = "";
 
     lines.forEach(line => {
+
         const [a, b, c] =
             line;
 
@@ -803,6 +792,7 @@ function checkResult(grid) {
             symbolA === symbolB &&
             symbolB === symbolC
         ) {
+
             highlightLine(line);
 
             if (
@@ -817,6 +807,7 @@ function checkResult(grid) {
                     symbolA
                 ]
             ) {
+
                 baseScore +=
                     scoreValues[
                         symbolA
@@ -831,6 +822,7 @@ function checkResult(grid) {
     });
 
     if (bonus) {
+
         const bonusScore =
             250;
 
@@ -851,6 +843,7 @@ function checkResult(grid) {
     }
 
     if (baseScore > 0) {
+
         score +=
             baseScore;
 
@@ -877,12 +870,6 @@ function checkResult(grid) {
     );
 }
 
-function toggleInfo() {
-    infoPanel.classList.toggle(
-        "show"
-    );
-}
-
 createReels();
 
 spinButton.disabled =
@@ -898,9 +885,11 @@ document
         ".stop-button"
     )
     .forEach(button => {
+
         button.addEventListener(
             "click",
             () => {
+
                 const index =
                     Number(
                         button.dataset.index
@@ -909,9 +898,5 @@ document
                 stopReel(index);
             }
         );
-    });
 
-infoButton.addEventListener(
-    "click",
-    toggleInfo
-);
+    });

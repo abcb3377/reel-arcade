@@ -9,86 +9,130 @@
 
     <body>
         <main class="game">
+
             <h1>REEL ARCADE</h1>
 
-            <div class="stats">
-                <div class="score">
-                    SCORE <span id="score">0</span>
-                </div>
+            <div class="game-layout">
+
+                <section class="game-main">
+
+                    <div class="stats">
+                        <div class="score">
+                            SCORE
+                            <span id="score">0</span>
+                        </div>
+                    </div>
+
+                    <div class="reels" id="reels"></div>
+
+                    <div class="stop-buttons">
+                        <button
+                            class="stop-button"
+                            data-index="0"
+                        >
+                            STOP
+                        </button>
+
+                        <button
+                            class="stop-button"
+                            data-index="1"
+                        >
+                            STOP
+                        </button>
+
+                        <button
+                            class="stop-button"
+                            data-index="2"
+                        >
+                            STOP
+                        </button>
+                    </div>
+
+                    <div class="message" id="message">
+                        SPINしてみよう！
+                    </div>
+
+                    <div class="main-buttons">
+                        <button id="spinButton">
+                            SPIN
+                        </button>
+                    </div>
+
+                </section>
+
+                <aside class="info-panel">
+
+                    <h2>SCORE TABLE</h2>
+
+                    <div class="score-table">
+
+                        <div class="score-row">
+                            <span class="score-symbols">
+                                7️⃣ 7️⃣ 7️⃣
+                            </span>
+                            <span class="score-value">
+                                +500
+                            </span>
+                        </div>
+
+                        <div class="score-row">
+                            <span class="score-symbols">
+                                BAR BAR BAR
+                            </span>
+                            <span class="score-value">
+                                +300
+                            </span>
+                        </div>
+
+                        <div class="score-row">
+                            <span class="score-symbols">
+                                🔔 🔔 🔔
+                            </span>
+                            <span class="score-value">
+                                +200
+                            </span>
+                        </div>
+
+                        <div class="score-row">
+                            <span class="score-symbols">
+                                🍉 🍉 🍉
+                            </span>
+                            <span class="score-value">
+                                +150
+                            </span>
+                        </div>
+
+                        <div class="score-row">
+                            <span class="score-symbols">
+                                🍋 🍋 🍋
+                            </span>
+                            <span class="score-value">
+                                BONUS +250
+                            </span>
+                        </div>
+
+                        <div class="score-row">
+                            <span class="score-symbols">
+                                🍒 🍒 🍒
+                            </span>
+                            <span class="score-value">
+                                +100
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <h2>HOW TO PLAY</h2>
+
+                    <p>1. SPINを押す</p>
+                    <p>2. 3つのSTOPでリールを止める</p>
+                    <p>3. 横・斜めのラインを揃える</p>
+                    <p>4. 揃った絵柄に応じてSCORE GET！</p>
+
+                </aside>
+
             </div>
 
-            <div class="reels" id="reels"></div>
-
-            <div class="stop-buttons">
-                <button class="stop-button" data-index="0">
-                    STOP
-                </button>
-
-                <button class="stop-button" data-index="1">
-                    STOP
-                </button>
-
-                <button class="stop-button" data-index="2">
-                    STOP
-                </button>
-            </div>
-
-            <div class="message" id="message">
-                SPINしてみよう！
-            </div>
-
-            <div class="main-buttons">
-                <button id="spinButton">
-                    SPIN
-                </button>
-
-                <button id="infoButton" class="info-button">
-                    INFO
-                </button>
-            </div>
-
-            <div id="infoPanel" class="info-panel">
-                <h2>SCORE TABLE</h2>
-
-                <div class="score-table">
-                    <div class="score-row">
-                        <span class="score-symbols">7️⃣ 7️⃣ 7️⃣</span>
-                        <span class="score-value"> +500</span>
-                    </div>
-
-                    <div class="score-row">
-                        <span class="score-symbols">BAR BAR BAR</span>
-                        <span class="score-value"> +300</span>
-                    </div>
-
-                    <div class="score-row">
-                        <span class="score-symbols">🔔 🔔 🔔</span>
-                        <span class="score-value"> +200</span>
-                    </div>
-
-                    <div class="score-row">
-                        <span class="score-symbols">🍉 🍉 🍉</span>
-                        <span class="score-value"> +150</span>
-                    </div>
-
-                    <div class="score-row">
-                        <span class="score-symbols">🍋 🍋 🍋</span>
-                        <span class="score-value"> BONUS +250</span>
-                    </div>
-
-                    <div class="score-row">
-                        <span class="score-symbols">🍒 🍒 🍒</span>
-                        <span class="score-value"> +100</span>
-                    </div>
-                </div>
-
-                <h2>HOW TO PLAY</h2>
-
-                <p>1. SPINを押す</p>
-                <p>2. 3つのSTOPでリールを止める</p>
-                <p>3. 横・斜めのラインを揃える</p>
-                <p>4. 揃った絵柄に応じてSCORE GET！</p>
-            </div>
         </main>
 
         <script src="script.js"></script>
