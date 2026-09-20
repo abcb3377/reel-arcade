@@ -51,23 +51,39 @@ let resultFinished = false;
 let reelData = [];
 let animationFrames = [null, null, null];
 
-const SPIN_SPEED = 800;
+const SPIN_SPEED =
+    window.innerWidth <= 700
+        ? 600
+        : 800;
 const SYMBOL_COUNT = 30;
 
-function randomSymbol() {
-    const random = Math.random() * 100;
+function createSymbolList() {
+    const list = [];
 
-    if (random < 30) {
-        return "🍒";
-    } else if (random < 55) {
-        return "🍀";
-    } else if (random < 75) {
-        return "⭐";
-    } else if (random < 90) {
-        return "🔥";
-    } else {
-        return "💎";
+    for (let i = 0; i < 6; i++) {
+        list.push("🍒");
+        list.push("🍀");
+        list.push("⭐");
+        list.push("🔥");
+        list.push("💎");
     }
+
+    for (let i = list.length - 1; i > 0; i--) {
+        const random =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
+        [
+            list[i],
+            list[random]
+        ] = [
+            list[random],
+            list[i]
+        ];
+    }
+
+    return list;
 }
 
 function createReels() {
@@ -93,11 +109,8 @@ function createReels() {
         track.style.flexDirection = "column";
         track.style.willChange = "transform";
 
-        const reelSymbols = [];
-
-        for (let i = 0; i < SYMBOL_COUNT; i++) {
-            reelSymbols.push(randomSymbol());
-        }
+        const reelSymbols =
+            createSymbolList();
 
         for (let repeat = 0; repeat < 3; repeat++) {
             reelSymbols.forEach(symbolText => {
