@@ -90,6 +90,7 @@ h1 {
     cursor: pointer;
     transition: 0.15s;
     position: relative;
+    padding-bottom: 10px;
 }
 
 .bet::after {
@@ -102,6 +103,14 @@ h1 {
     font-weight: normal;
     letter-spacing: 1px;
     opacity: 0.45;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+@media (max-wedth: 700px) {
+    .bet {
+        padding-bottom: 10px;
+    }
 }
 
 .bet:hover {

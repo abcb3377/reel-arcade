@@ -46,6 +46,7 @@ let coin = 1000;
 
 let spinning = false;
 let stopped = [false, false, false];
+let resultFinished = false;
 
 let reelData = [];
 let animationFrames = [null, null, null];
@@ -341,6 +342,7 @@ function spin() {
     playSound(180, 0.15);
 
     spinning = true;
+    resultFinished = false;
 
     spinButton.disabled = true;
 
@@ -380,6 +382,12 @@ function spin() {
 }
 
 function finishSpin() {
+    if (resultFinished) {
+        return;
+    }
+
+    resultFinished = true;
+
     const grid = [];
 
     for (let column = 0; column < 3; column++) {
