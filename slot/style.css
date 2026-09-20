@@ -57,7 +57,7 @@ body {
     max-width: 620px;
     margin: 0 auto 20px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 12px;
 }
 
@@ -78,23 +78,8 @@ body {
     color: #ffffff;
 }
 
-.bet {
-    cursor: pointer;
-    user-select: none;
-    transition:
-        transform 0.15s,
-        background 0.15s;
-}
-
-.bet:hover {
-    background: #1b1b1b;
-}
-
-.bet:active {
-    transform: scale(0.96);
-}
-
 .reels {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
@@ -320,6 +305,28 @@ body {
     font-size: 14px;
 }
 
+.score-table {
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.score-row {
+    display: grid;
+    grid-template-columns: 120px 100px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.score-symbols {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.score-value {
+    text-align: left;
+    white-space: nowrap;
+}
+
 .reel.stopped {
     animation: stopped 0.35s ease;
 }
@@ -533,26 +540,4 @@ body {
     .message {
         font-size: 14px;
     }
-}
-
-.score-table {
-    width: fit-content;
-    margin: 0 auto;
-}
-
-.score-row {
-    display: grid;
-    grid-template-columns: 120px 100px;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.score-symbols {
-    text-align: right;
-    white-space: nowrap;
-}
-
-.score-value {
-    text-align: left;
-    white-space: nowrap;
 }

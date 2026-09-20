@@ -1,6 +1,5 @@
 const reels = document.getElementById("reels");
 const scoreDisplay = document.getElementById("score");
-const coinDisplay = document.getElementById("coin");
 const message = document.getElementById("message");
 const spinButton = document.getElementById("spinButton");
 const infoButton = document.getElementById("infoButton");
@@ -9,7 +8,6 @@ const infoPanel = document.getElementById("infoPanel");
 let audioContext = null;
 
 let score = 0;
-let coin = 1000;
 
 let spinning = false;
 let stopped = [false, false, false];
@@ -175,7 +173,28 @@ function playWinSound() {
 }
 
 function shuffleCopy(array) {
-    return [...array];
+    const result = [...array];
+
+    for (
+        let i = result.length - 1;
+        i > 0;
+        i--
+    ) {
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
+        [
+            result[i],
+            result[j]
+        ] = [
+            result[j],
+            result[i]
+        ];
+    }
+
+    return result;
 }
 
 function createReels() {
@@ -818,14 +837,8 @@ function checkResult(grid) {
         score +=
             bonusScore;
 
-        coin +=
-            bonusScore;
-
         scoreDisplay.textContent =
             score;
-
-        coinDisplay.textContent =
-            coin;
 
         message.textContent =
             `🍋 BONUS！ +${bonusScore} SCORE`;
@@ -841,14 +854,8 @@ function checkResult(grid) {
         score +=
             baseScore;
 
-        coin +=
-            baseScore;
-
         scoreDisplay.textContent =
             score;
-
-        coinDisplay.textContent =
-            coin;
 
         message.textContent =
             `${resultText} +${baseScore} SCORE`;
