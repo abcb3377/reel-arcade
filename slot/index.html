@@ -6,19 +6,14 @@
         <title>REEL ARCADE</title>
         <link rel="stylesheet" href="style.css">
     </head>
+
     <body>
         <main class="game">
-            <div id="comboPopup" class="combo-popup"></div>
-
             <h1>REEL ARCADE</h1>
 
             <div class="stats">
                 <div class="score">
                     SCORE <span id="score">0</span>
-                </div>
-
-                <div class="combo">
-                    COMBO <span id="combo">0</span>
                 </div>
 
                 <div class="bet" id="betDisplay">
@@ -30,13 +25,20 @@
                 </div>
             </div>
 
-            <div class="reels" id="reels">
-            </div>
+            <div class="reels" id="reels"></div>
 
             <div class="stop-buttons">
-                <button class="stop-button" data-index="0">STOP</button>
-                <button class="stop-button" data-index="1">STOP</button>
-                <button class="stop-button" data-index="2">STOP</button>
+                <button class="stop-button" data-index="0">
+                    STOP
+                </button>
+
+                <button class="stop-button" data-index="1">
+                    STOP
+                </button>
+
+                <button class="stop-button" data-index="2">
+                    STOP
+                </button>
             </div>
 
             <div class="message" id="message">
@@ -55,11 +57,20 @@
 
             <div id="infoPanel" class="info-panel">
                 <h2>SCORE TABLE</h2>
-                <p>💎 💎 💎  +500</p>
-                <p>🔥 🔥 🔥  +300</p>
-                <p>⭐ ⭐ ⭐  +200</p>
-                <p>🍀 🍀 🍀  +150</p>
-                <p>🍒 🍒 🍒  +100</p>
+
+                <p>7️⃣ 7️⃣ 7️⃣　+500</p>
+                <p>BAR BAR BAR　+300</p>
+                <p>🔔 🔔 🔔　+200</p>
+                <p>🍉 🍉 🍉　+150</p>
+                <p>🍋 🍋 🍋　BONUS +250</p>
+                <p>🍒 🍒 🍒　+100</p>
+
+                <h2>HOW TO PLAY</h2>
+
+                <p>1. SPINを押す</p>
+                <p>2. 3つのSTOPでリールを止める</p>
+                <p>3. 横・斜めのラインを揃える</p>
+                <p>4. 揃った絵柄に応じてSCORE GET！</p>
             </div>
         </main>
 

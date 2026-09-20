@@ -1,47 +1,18 @@
 const betDisplay = document.getElementById("betDisplay");
 const betValue = document.getElementById("bet");
 
-const audioContext = new AudioContext();
-
-function playSound(frequency, duration) {
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    oscillator.frequency.value = frequency;
-    oscillator.type = "square";
-
-    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        audioContext.currentTime + duration
-    );
-
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-}
-
-const symbols = [
-    "⭐",
-    "🍀",
-    "💎",
-    "🔥",
-    "🍒"
-];
-
 const reels = document.getElementById("reels");
 const scoreDisplay = document.getElementById("score");
-const comboDisplay = document.getElementById("combo");
 const coinDisplay = document.getElementById("coin");
 const message = document.getElementById("message");
 const spinButton = document.getElementById("spinButton");
-const comboPopup = document.getElementById("comboPopup");
+const infoButton = document.getElementById("infoButton");
+const infoPanel = document.getElementById("infoPanel");
+
+let audioContext = null;
 
 let bet = 10;
 let score = 0;
-let combo = 0;
 let coin = 1000;
 
 let spinning = false;
@@ -55,76 +26,208 @@ const SPIN_SPEED =
     window.innerWidth <= 700
         ? 600
         : 800;
-const SYMBOL_COUNT = 30;
 
-function createSymbolList() {
-    const list = [];
+const SYMBOL_COUNT = 20;
 
-    for (let i = 0; i < 6; i++) {
-        list.push("🍒");
-        list.push("🍀");
-        list.push("⭐");
-        list.push("🔥");
-        list.push("💎");
+const reelSymbols = [
+    [
+        "🍒",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍉",
+        "🍋",
+        "BAR",
+        "🍒",
+        "🔔",
+        "🍋",
+        "🍉",
+        "🍒",
+        "7️⃣",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍉",
+        "🍋",
+        "BAR",
+        "🍒"
+    ],
+
+    [
+        "🍋",
+        "🍒",
+        "🔔",
+        "🍉",
+        "🍒",
+        "🍋",
+        "BAR",
+        "🍒",
+        "🍉",
+        "🔔",
+        "🍋",
+        "🍒",
+        "7️⃣",
+        "🍉",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍉",
+        "🍋",
+        "🍒"
+    ],
+
+    [
+        "🍒",
+        "🍉",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍋",
+        "BAR",
+        "🍉",
+        "🍒",
+        "🔔",
+        "🍋",
+        "🍒",
+        "7️⃣",
+        "🍉",
+        "🍋",
+        "🍒",
+        "🔔",
+        "🍋",
+        "🍉",
+        "🍒"
+    ]
+];
+
+function playSound(
+    frequency,
+    duration,
+    type = "square"
+) {
+    if (!audioContext) {
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
     }
 
-    for (let i = list.length - 1; i > 0; i--) {
-        const random =
-            Math.floor(
-                Math.random() * (i + 1)
-            );
+    audioContext.resume();
 
-        [
-            list[i],
-            list[random]
-        ] = [
-            list[random],
-            list[i]
-        ];
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.frequency.value =
+        frequency;
+
+    oscillator.type = type;
+
+    gain.gain.setValueAtTime(
+        0.08,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime +
+        duration
+    );
+}
+
+function playWinSound() {
+    if (!audioContext) {
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
     }
 
-    return list;
+    audioContext.resume();
+
+    const notes = [
+        523,
+        659,
+        784,
+        1046
+    ];
+
+    notes.forEach(
+        (frequency, index) => {
+            setTimeout(() => {
+                playSound(
+                    frequency,
+                    0.18,
+                    "square"
+                );
+            }, index * 90);
+        }
+    );
+}
+
+function shuffleCopy(array) {
+    return [...array];
 }
 
 function createReels() {
     reels.innerHTML = "";
 
-    for (let column = 0; column < 3; column++) {
-        const reel = document.createElement("div");
+    for (
+        let column = 0;
+        column < 3;
+        column++
+    ) {
+        const reel =
+            document.createElement("div");
 
         reel.className = "reel";
 
-        reel.style.overflow = "hidden";
-        reel.style.position = "relative";
-
-        const track = document.createElement("div");
+        const track =
+            document.createElement("div");
 
         track.className = "reel-track";
 
-        track.style.position = "absolute";
-        track.style.left = "0";
-        track.style.top = "0";
-        track.style.width = "100%";
-        track.style.display = "flex";
-        track.style.flexDirection = "column";
-        track.style.willChange = "transform";
+        const fixedSymbols =
+            shuffleCopy(
+                reelSymbols[column]
+            );
 
-        const reelSymbols =
-            createSymbolList();
+        for (
+            let repeat = 0;
+            repeat < 3;
+            repeat++
+        ) {
+            fixedSymbols.forEach(
+                symbolText => {
+                    const symbol =
+                        document.createElement(
+                            "div"
+                        );
 
-        for (let repeat = 0; repeat < 3; repeat++) {
-            reelSymbols.forEach(symbolText => {
-                const symbol = document.createElement("div");
+                    symbol.className =
+                        "symbol";
 
-                symbol.className = "symbol";
-                symbol.textContent = symbolText;
+                    symbol.textContent =
+                        symbolText;
 
-                symbol.style.display = "flex";
-                symbol.style.alignItems = "center";
-                symbol.style.justifyContent = "center";
-
-                track.appendChild(symbol);
-            });
+                    track.appendChild(
+                        symbol
+                    );
+                }
+            );
         }
 
         reel.appendChild(track);
@@ -132,14 +235,22 @@ function createReels() {
     }
 
     requestAnimationFrame(() => {
-        document.querySelectorAll(".reel").forEach(reel => {
-            const symbolHeight = reel.clientHeight / 3;
+        document
+            .querySelectorAll(".reel")
+            .forEach(reel => {
+                const symbolHeight =
+                    reel.clientHeight / 3;
 
-            reel.querySelectorAll(".symbol").forEach(symbol => {
-                symbol.style.height = `${symbolHeight}px`;
-                symbol.style.minHeight = `${symbolHeight}px`;
+                reel
+                    .querySelectorAll(".symbol")
+                    .forEach(symbol => {
+                        symbol.style.height =
+                            `${symbolHeight}px`;
+
+                        symbol.style.minHeight =
+                            `${symbolHeight}px`;
+                    });
             });
-        });
     });
 }
 
@@ -149,49 +260,61 @@ function setupReels() {
     const reelElements =
         document.querySelectorAll(".reel");
 
-    reelElements.forEach((reel, index) => {
-        const track =
-            reel.querySelector(".reel-track");
+    reelElements.forEach(
+        (reel, index) => {
+            const track =
+                reel.querySelector(
+                    ".reel-track"
+                );
 
-        const symbolHeight =
-            reel.clientHeight / 3;
+            const symbolHeight =
+                reel.clientHeight / 3;
 
-        const startIndex =
-            Math.floor(
-                Math.random() * SYMBOL_COUNT
-            );
+            const startIndex =
+                Math.floor(
+                    Math.random() *
+                    SYMBOL_COUNT
+                );
 
-        const startPosition =
-            startIndex * symbolHeight;
+            const startPosition =
+                startIndex *
+                symbolHeight;
 
-        reelData[index] = {
-            reel: reel,
-            track: track,
-            position: startPosition,
-            lastTime: null,
-            symbolHeight: symbolHeight
-        };
+            reelData[index] = {
+                reel: reel,
+                track: track,
+                position: startPosition,
+                lastTime: null,
+                symbolHeight:
+                    symbolHeight
+            };
 
-        track.style.transition = "";
+            track.style.transition = "";
 
-        track.style.transform =
-            `translateY(-${startPosition}px)`;
-    });
+            track.style.transform =
+                `translate3d(0, -${startPosition}px, 0)`;
+
+            track.style.filter =
+                "blur(0)";
+        }
+    );
 }
 
 function getCurrentSymbols(index) {
-    const data = reelData[index];
+    const data =
+        reelData[index];
 
     const symbolsInTrack =
-        data.track.querySelectorAll(".symbol");
-
-    const symbolHeight =
-        data.symbolHeight;
+        data.track.querySelectorAll(
+            ".symbol"
+        );
 
     const currentIndex =
         Math.round(
-            Math.abs(data.position) /
-            symbolHeight
+            Math.abs(
+                data.position
+            ) /
+            data.symbolHeight
         );
 
     const topIndex =
@@ -207,48 +330,81 @@ function getCurrentSymbols(index) {
         SYMBOL_COUNT;
 
     return [
-        symbolsInTrack[topIndex].textContent,
-        symbolsInTrack[middleIndex].textContent,
-        symbolsInTrack[bottomIndex].textContent
+        symbolsInTrack[
+            topIndex
+        ].textContent,
+
+        symbolsInTrack[
+            middleIndex
+        ].textContent,
+
+        symbolsInTrack[
+            bottomIndex
+        ].textContent
     ];
 }
 
 function spinReel(index) {
-    const data = reelData[index];
+    const data =
+        reelData[index];
 
     data.lastTime = null;
 
     animationFrames[index] =
-        requestAnimationFrame(time => {
-            updateReel(index, time);
-        });
+        requestAnimationFrame(
+            time => {
+                updateReel(
+                    index,
+                    time
+                );
+            }
+        );
 }
 
-function updateReel(index, timestamp) {
-    if (!spinning || stopped[index]) {
+function updateReel(
+    index,
+    timestamp
+) {
+    if (
+        !spinning ||
+        stopped[index]
+    ) {
         return;
     }
 
-    const data = reelData[index];
+    const data =
+        reelData[index];
 
-    if (data.lastTime === null) {
-        data.lastTime = timestamp;
+    if (
+        data.lastTime === null
+    ) {
+        data.lastTime =
+            timestamp;
     }
 
     const delta =
-        (timestamp - data.lastTime) / 1000;
+        (
+            timestamp -
+            data.lastTime
+        ) / 1000;
 
-    data.lastTime = timestamp;
+    data.lastTime =
+        timestamp;
 
     data.position +=
-        SPIN_SPEED * delta;
+        SPIN_SPEED *
+        delta;
 
     const loopDistance =
         SYMBOL_COUNT *
         data.symbolHeight;
 
-    if (data.position >= loopDistance) {
-        data.position -= loopDistance;
+    if (
+        data.position >=
+        loopDistance
+    ) {
+        data.position -=
+            loopDistance;
     }
 
     data.track.style.transform =
@@ -258,13 +414,21 @@ function updateReel(index, timestamp) {
         "blur(2px)";
 
     animationFrames[index] =
-        requestAnimationFrame(time => {
-            updateReel(index, time);
-        });
+        requestAnimationFrame(
+            time => {
+                updateReel(
+                    index,
+                    time
+                );
+            }
+        );
 }
 
 function stopReel(index) {
-    if (!spinning || stopped[index]) {
+    if (
+        !spinning ||
+        stopped[index]
+    ) {
         return;
     }
 
@@ -279,33 +443,38 @@ function stopReel(index) {
         button.disabled = true;
     }
 
-    const data = reelData[index];
+    const data =
+        reelData[index];
 
-    data.track.style.filter = "blur(0)";
+    data.track.style.filter =
+        "blur(0)";
 
-    if (animationFrames[index] !== null) {
+    if (
+        animationFrames[index] !==
+        null
+    ) {
         cancelAnimationFrame(
             animationFrames[index]
         );
 
-        animationFrames[index] = null;
+        animationFrames[index] =
+            null;
     }
-
-    const currentPosition =
-        data.position;
 
     const snappedPosition =
         Math.round(
-            currentPosition /
+            data.position /
             data.symbolHeight
-        ) * data.symbolHeight;
+        ) *
+        data.symbolHeight;
 
     const loopDistance =
         SYMBOL_COUNT *
         data.symbolHeight;
 
     data.position =
-        snappedPosition % loopDistance;
+        snappedPosition %
+        loopDistance;
 
     data.track.style.transition =
         "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
@@ -314,22 +483,29 @@ function stopReel(index) {
         `translate3d(0, -${data.position}px, 0)`;
 
     playSound(
-        300 + index * 80,
+        280 + index * 80,
         0.1
     );
 
     setTimeout(() => {
-        data.track.style.transition = "";
+        data.track.style.transition =
+            "";
 
-        const reel = data.reel;
-
-        reel.classList.add("stopped");
+        data.reel.classList.add(
+            "stopped"
+        );
 
         setTimeout(() => {
-            reel.classList.remove("stopped");
+            data.reel.classList.remove(
+                "stopped"
+            );
         }, 350);
 
-        if (stopped.every(value => value)) {
+        if (
+            stopped.every(
+                value => value
+            )
+        ) {
             finishSpin();
         }
     }, 230);
@@ -344,15 +520,34 @@ function spin() {
         message.textContent =
             "COINが足りません！";
 
+        playSound(
+            120,
+            0.2,
+            "sawtooth"
+        );
+
         return;
     }
 
     coin -= bet;
-    coinDisplay.textContent = coin;
+
+    coinDisplay.textContent =
+        coin;
+
+    if (!audioContext) {
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+    }
 
     audioContext.resume();
 
-    playSound(180, 0.15);
+    playSound(
+        180,
+        0.15
+    );
 
     spinning = true;
     resultFinished = false;
@@ -362,15 +557,10 @@ function spin() {
     document
         .querySelectorAll(".symbol")
         .forEach(symbol => {
-            symbol.classList.remove("win");
+            symbol.classList.remove(
+                "win"
+            );
         });
-
-    comboPopup.classList.remove(
-        "show",
-        "combo-2",
-        "combo-3",
-        "combo-5"
-    );
 
     message.textContent =
         "STOPで止めよう！";
@@ -384,12 +574,19 @@ function spin() {
     setupReels();
 
     document
-        .querySelectorAll(".stop-button")
+        .querySelectorAll(
+            ".stop-button"
+        )
         .forEach(button => {
-            button.disabled = false;
+            button.disabled =
+                false;
         });
 
-    for (let i = 0; i < 3; i++) {
+    for (
+        let i = 0;
+        i < 3;
+        i++
+    ) {
         spinReel(i);
     }
 }
@@ -403,42 +600,115 @@ function finishSpin() {
 
     const grid = [];
 
-    for (let column = 0; column < 3; column++) {
+    for (
+        let column = 0;
+        column < 3;
+        column++
+    ) {
         grid[column] =
-            getCurrentSymbols(column);
+            getCurrentSymbols(
+                column
+            );
     }
 
     checkResult(grid);
 
     spinning = false;
 
-    spinButton.disabled = false;
+    spinButton.disabled =
+        false;
 
     document
-        .querySelectorAll(".stop-button")
+        .querySelectorAll(
+            ".stop-button"
+        )
         .forEach(button => {
-            button.disabled = false;
+            button.disabled =
+                false;
         });
+}
+
+function highlightLine(line) {
+    line.forEach(
+        ([column, row]) => {
+            const data =
+                reelData[column];
+
+            const symbolsInReel =
+                data.track.querySelectorAll(
+                    ".symbol"
+                );
+
+            const currentIndex =
+                Math.round(
+                    Math.abs(
+                        data.position
+                    ) /
+                    data.symbolHeight
+                ) %
+                SYMBOL_COUNT;
+
+            const actualIndex =
+                currentIndex + row;
+
+            const symbol =
+                symbolsInReel[
+                    actualIndex
+                ];
+
+            if (symbol) {
+                symbol.classList.add(
+                    "win"
+                );
+            }
+        }
+    );
 }
 
 function successEffect() {
     const game =
-        document.querySelector(".game");
+        document.querySelector(
+            ".game"
+        );
 
-    game.classList.remove("shake");
+    game.classList.remove(
+        "shake"
+    );
 
     void game.offsetWidth;
 
-    game.classList.add("shake");
+    game.classList.add(
+        "shake"
+    );
 
-    for (let i = 0; i < 30; i++) {
+    game.classList.remove(
+        "success-flash"
+    );
+
+    void game.offsetWidth;
+
+    game.classList.add(
+        "success-flash"
+    );
+
+    for (
+        let i = 0;
+        i < 35;
+        i++
+    ) {
         const spark =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
-        spark.className = "spark";
+        spark.className =
+            "spark";
 
-        spark.style.left = "50%";
-        spark.style.top = "50%";
+        spark.style.left =
+            "50%";
+
+        spark.style.top =
+            "50%";
 
         const angle =
             Math.random() *
@@ -460,7 +730,9 @@ function successEffect() {
             `${Math.sin(angle) * distance}px`
         );
 
-        document.body.appendChild(spark);
+        document.body.appendChild(
+            spark
+        );
 
         setTimeout(() => {
             spark.remove();
@@ -470,28 +742,56 @@ function successEffect() {
 
 function checkResult(grid) {
     const scoreValues = {
-        "🍒": 100,
-        "🍀": 150,
-        "⭐": 200,
-        "🔥": 300,
-        "💎": 500
+        "7️⃣": 500,
+        "BAR": 300,
+        "🔔": 200,
+        "🍉": 150,
+        "🍒": 100
     };
 
-    const reelElements =
-        document.querySelectorAll(".reel");
+    const resultNames = {
+        "7️⃣": "大当たり！",
+        "BAR": "中当たり！",
+        "🔔": "小当たり！",
+        "🍉": "小当たり！",
+        "🍒": "当たり！"
+    };
 
     const lines = [
-        [[0, 0], [1, 0], [2, 0]],
-        [[0, 1], [1, 1], [2, 1]],
-        [[0, 2], [1, 2], [2, 2]],
-        [[0, 0], [1, 1], [2, 2]],
-        [[2, 0], [1, 1], [0, 2]]
+        [
+            [0, 0],
+            [1, 0],
+            [2, 0]
+        ],
+        [
+            [0, 1],
+            [1, 1],
+            [2, 1]
+        ],
+        [
+            [0, 2],
+            [1, 2],
+            [2, 2]
+        ],
+        [
+            [0, 0],
+            [1, 1],
+            [2, 2]
+        ],
+        [
+            [2, 0],
+            [1, 1],
+            [0, 2]
+        ]
     ];
 
     let baseScore = 0;
+    let bonus = false;
+    let resultText = "";
 
     lines.forEach(line => {
-        const [a, b, c] = line;
+        const [a, b, c] =
+            line;
 
         const symbolA =
             grid[a[0]][a[1]];
@@ -506,163 +806,102 @@ function checkResult(grid) {
             symbolA === symbolB &&
             symbolB === symbolC
         ) {
-            baseScore +=
-                scoreValues[symbolA];
+            highlightLine(line);
 
-            line.forEach(
-                ([column, row]) => {
-                    const data =
-                        reelData[column];
+            if (
+                symbolA === "🍋"
+            ) {
+                bonus = true;
+                return;
+            }
 
-                    const symbolsInReel =
-                        data.track
-                            .querySelectorAll(
-                                ".symbol"
-                            );
+            if (
+                scoreValues[
+                    symbolA
+                ]
+            ) {
+                baseScore +=
+                    scoreValues[
+                        symbolA
+                    ];
 
-                    const currentIndex =
-                        Math.round(
-                            Math.abs(
-                                data.position
-                            ) /
-                            data.symbolHeight
-                        ) %
-                        SYMBOL_COUNT;
-
-                    const actualIndex =
-                        currentIndex + row;
-
-                    symbolsInReel[
-                        actualIndex
-                    ].classList.add("win");
-                }
-            );
+                resultText =
+                    resultNames[
+                        symbolA
+                    ];
+            }
         }
     });
 
-    if (baseScore > 0) {
-        combo++;
+    if (bonus) {
+        const bonusScore =
+            250;
 
-        comboDisplay.textContent =
-            combo;
+        score +=
+            bonusScore;
 
-        const gainedScore =
-            baseScore * combo;
-
-        coin += gainedScore;
-
-        coinDisplay.textContent =
-            coin;
-
-        score += gainedScore;
+        coin +=
+            bonusScore;
 
         scoreDisplay.textContent =
             score;
 
-        comboPopup.textContent =
-            `COMBO ×${combo}`;
-
-        comboPopup.classList.remove(
-            "show",
-            "combo-2",
-            "combo-3",
-            "combo-5"
-        );
-
-        if (combo >= 5) {
-            comboPopup.classList.add(
-                "combo-5"
-            );
-
-            const game =
-                document.querySelector(
-                    ".game"
-                );
-
-            game.classList.remove(
-                "combo-shake"
-            );
-
-            void game.offsetWidth;
-
-            game.classList.add(
-                "combo-shake"
-            );
-
-        } else if (combo >= 3) {
-            comboPopup.classList.add(
-                "combo-3"
-            );
-
-        } else if (combo >= 2) {
-            comboPopup.classList.add(
-                "combo-2"
-            );
-        }
-
-        void comboPopup.offsetWidth;
-
-        comboPopup.classList.add(
-            "show"
-        );
+        coinDisplay.textContent =
+            coin;
 
         message.textContent =
-            `成功！ +${gainedScore} SCORE（基本${baseScore} × COMBO${combo}）`;
+            `🍋 BONUS！ +${bonusScore} SCORE`;
+
+        playWinSound();
 
         successEffect();
 
-        message.classList.remove(
-            "success"
-        );
+        return;
+    }
 
-        void message.offsetWidth;
+    if (baseScore > 0) {
+        score +=
+            baseScore;
 
-        message.classList.add(
-            "success"
-        );
+        coin +=
+            baseScore;
 
-        const game =
-            document.querySelector(
-                ".game"
-            );
+        scoreDisplay.textContent =
+            score;
 
-        game.classList.remove(
-            "success-flash"
-        );
-
-        void game.offsetWidth;
-
-        game.classList.add(
-            "success-flash"
-        );
-
-    } else {
-        combo = 0;
-
-        comboDisplay.textContent =
-            combo;
+        coinDisplay.textContent =
+            coin;
 
         message.textContent =
-            "もう一度チャレンジ！";
+            `${resultText} +${baseScore} SCORE`;
+
+        playWinSound();
+
+        successEffect();
+
+        return;
     }
+
+    message.textContent =
+        "もう一度チャレンジ！";
+
+    playSound(
+        160,
+        0.12,
+        "triangle"
+    );
 }
 
 function toggleInfo() {
-    const infoPanel =
-        document.getElementById(
-            "infoPanel"
-        );
-
-    if (infoPanel) {
-        infoPanel.classList.toggle(
-            "show"
-        );
-    }
+    infoPanel.classList.toggle(
+        "show"
+    );
 }
 
 createReels();
 
-spinButton.disabled = false;
+spinButton.disabled =
+    false;
 
 spinButton.addEventListener(
     "click",
@@ -670,7 +909,9 @@ spinButton.addEventListener(
 );
 
 document
-    .querySelectorAll(".stop-button")
+    .querySelectorAll(
+        ".stop-button"
+    )
     .forEach(button => {
         button.addEventListener(
             "click",
@@ -700,11 +941,10 @@ betDisplay.addEventListener(
             bet = 10;
         }
 
-        betValue.textContent = bet;
+        betValue.textContent =
+            bet;
     }
 );
-
-const infoButton = document.getElementById("infoButton");
 
 infoButton.addEventListener(
     "click",
