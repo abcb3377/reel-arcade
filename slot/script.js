@@ -682,3 +682,10 @@ betDisplay.addEventListener(
         betValue.textContent = bet;
     }
 );
+
+const infoButton = document.getElementById("infoButton");
+
+infoButton.addEventListener(
+    "click",
+    toggleInfo
+);
