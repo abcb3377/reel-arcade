@@ -43,12 +43,16 @@ body {
 .game h1 {
     margin: 0 0 28px;
     text-align: center;
-    font-size: clamp(30px, 7vw, 52px);
-    letter-spacing: 5px;
+    font-size: clamp(42px, 7vw, 76px);
+    font-weight: 900;
+    letter-spacing: 4px;
     color: #ffffff;
     text-shadow:
-        0 0 10px rgba(255, 255, 255, 0.35),
-        0 0 25px rgba(255, 220, 80, 0.2);
+        0 0 4px #ffffff,
+        0 0 8px #ffffff,
+        0 0 16px #ffe27a,
+        0 0 28px #ffd84d,
+        0 0 45px #c9961a;
 }
 
 .game-layout {
@@ -322,6 +326,14 @@ body {
     white-space: nowrap;
 }
 
+.score-value.bonus {
+    color: #ffe600;
+    text-shadow:
+        0 0 5px #ffd000,
+        0 0 10px #ffd000,
+        0 0 20px #ffd700;
+}
+
 .reel.stopped {
     animation: stopped 0.35s ease;
 }
@@ -542,4 +554,14 @@ body {
     .message {
         font-size: 14px;
     }
+}
+
+.info-divider {
+    width: 100%;
+    height: 2px;
+    margin: 22px 0 24px;
+    border: none;
+    background: #555555;
+    box-shadow:
+        0 0 4px rgba(255, 255, 255, 0.15);
 }
