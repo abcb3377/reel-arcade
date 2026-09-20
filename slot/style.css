@@ -89,6 +89,19 @@ h1 {
 .bet {
     cursor: pointer;
     transition: 0.15s;
+    position: relative;
+}
+
+.bet::after {
+    content: "CLICK TO CHANGE";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 8px;
+    font-weight: normal;
+    letter-spacing: 1px;
+    opacity: 0.45;
 }
 
 .bet:hover {
