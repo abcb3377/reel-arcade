@@ -53,10 +53,12 @@ body {
 }
 
 .stats {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto 20px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    margin-bottom: 20px;
 }
 
 .stats > div {
@@ -318,30 +320,6 @@ body {
     font-size: 14px;
 }
 
-.score-table {
-    width: 300px;
-    max-width: 100%;
-    margin: 0 auto;
-}
-
-.score-row {
-    display: grid;
-    grid-template-columns: 150px 120px;
-    align-items: center;
-    min-height: 32px;
-}
-
-.score-symbols {
-    text-align: right;
-    padding-right: 15px;
-    white-space: nowrap;
-}
-
-.score-value {
-    text-align: left;
-    white-space: nowrap;
-}
-
 .reel.stopped {
     animation: stopped 0.35s ease;
 }
@@ -541,18 +519,6 @@ body {
         min-width: 80px;
         height: 58px;
     }
-
-    .score-table {
-        width: 290px;
-    }
-
-    .score-row {
-        grid-template-columns: 145px 120px;
-    }
-
-    .score-symbols {
-        padding-right: 15px;
-    }
 }
 
 @media (max-width: 400px) {
@@ -567,12 +533,26 @@ body {
     .message {
         font-size: 14px;
     }
+}
 
-    .score-table {
-        width: 280px;
-    }
+.score-table {
+    width: fit-content;
+    margin: 0 auto;
+}
 
-    .score-row {
-        grid-template-columns: 140px 120px;
-    }
+.score-row {
+    display: grid;
+    grid-template-columns: 120px 100px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.score-symbols {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.score-value {
+    text-align: left;
+    white-space: nowrap;
 }

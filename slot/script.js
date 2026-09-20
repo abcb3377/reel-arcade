@@ -1,6 +1,3 @@
-const betDisplay = document.getElementById("betDisplay");
-const betValue = document.getElementById("bet");
-
 const reels = document.getElementById("reels");
 const scoreDisplay = document.getElementById("score");
 const coinDisplay = document.getElementById("coin");
@@ -11,7 +8,6 @@ const infoPanel = document.getElementById("infoPanel");
 
 let audioContext = null;
 
-let bet = 10;
 let score = 0;
 let coin = 1000;
 
@@ -22,203 +18,98 @@ let resultFinished = false;
 let reelData = [];
 let animationFrames = [null, null, null];
 
-const betSettings = {
-    10: {
-        speed: 800,
-        glow: false,
-        shake: false,
-        flash: false
-    },
-    20: {
-        speed: 700,
-        glow: true,
-        shake: false,
-        flash: false
-    },
-    30: {
-        speed: 600,
-        glow: true,
-        shake: true,
-        flash: false
-    },
-    40: {
-        speed: 500,
-        glow: true,
-        shake: true,
-        flash: true
-    },
-    50: {
-        speed: 400,
-        glow: true,
-        shake: true,
-        flash: true
-    }
-};
+const SPIN_SPEED =
+    window.innerWidth <= 700
+        ? 600
+        : 800;
 
 const SYMBOL_COUNT = 20;
 
 const reelSymbols = [
     [
-        "🍒","🍋","🔔","🍒","🍉","🍋","BAR","🍒","🔔","🍋",
-        "🍉","🍒","7️⃣","🍋","🔔","🍒","🍉","🍋","BAR","🍒"
+        "🍒",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍉",
+        "🍋",
+        "BAR",
+        "🍒",
+        "🔔",
+        "🍋",
+        "🍉",
+        "🍒",
+        "7️⃣",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍉",
+        "🍋",
+        "BAR",
+        "🍒"
     ],
+
     [
-        "🍋","🍒","🔔","🍉","🍒","🍋","BAR","🍒","🍉","🔔",
-        "🍋","🍒","7️⃣","🍉","🍋","🔔","🍒","🍉","🍋","🍒"
+        "🍋",
+        "🍒",
+        "🔔",
+        "🍉",
+        "🍒",
+        "🍋",
+        "BAR",
+        "🍒",
+        "🍉",
+        "🔔",
+        "🍋",
+        "🍒",
+        "7️⃣",
+        "🍉",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍉",
+        "🍋",
+        "🍒"
     ],
+
     [
-        "🍒","🍉","🍋","🔔","🍒","🍋","BAR","🍉","🍒","🔔",
-        "🍋","🍒","7️⃣","🍉","🍋","🍒","🔔","🍋","🍉","🍒"
+        "🍒",
+        "🍉",
+        "🍋",
+        "🔔",
+        "🍒",
+        "🍋",
+        "BAR",
+        "🍉",
+        "🍒",
+        "🔔",
+        "🍋",
+        "🍒",
+        "7️⃣",
+        "🍉",
+        "🍋",
+        "🍒",
+        "🔔",
+        "🍋",
+        "🍉",
+        "🍒"
     ]
 ];
 
-const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 4, 8],
-    [6, 4, 2]
-];
-
-const scoreValues = {
-    "7️⃣": 100,
-    "BAR": 60,
-    "🔔": 40,
-    "🍉": 30,
-    "🍒": 20
-};
-
-const resultNames = {
-    "7️⃣": "7",
-    "BAR": "BAR",
-    "🔔": "BELL",
-    "🍉": "WATERMELON",
-    "🍋": "LEMON",
-    "🍒": "CHERRY"
-};
-
-function copyArray(array) {
-    return [...array];
-}
-
-function createReels() {
-    reels.innerHTML = "";
-    reelData = [];
-
-    for (let i = 0; i < 3; i++) {
-        const reel = document.createElement("div");
-        reel.className = "reel";
-
-        const strip = document.createElement("div");
-        strip.className = "reel-strip";
-
-        const symbols = [];
-
-        const base = copyArray(reelSymbols[i]);
-
-        for (let repeat = 0; repeat < 3; repeat++) {
-            symbols.push(...base);
-        }
-
-        symbols.forEach(symbol => {
-            const item = document.createElement("div");
-            item.className = "symbol";
-            item.textContent = symbol;
-            strip.appendChild(item);
-        });
-
-        reel.appendChild(strip);
-        reels.appendChild(reel);
-
-        reelData.push({
-            reel,
-            strip,
-            symbols,
-            position: SYMBOL_COUNT,
-            targetPosition: SYMBOL_COUNT,
-            stopping: false
-        });
-    }
-}
-
-function getCurrentSymbols() {
-    return reelData.map(data => {
-        const index =
-            Math.round(data.position) % SYMBOL_COUNT;
-
-        return data.symbols[index + SYMBOL_COUNT];
-    });
-}
-
-function updateReel(index) {
-    const data = reelData[index];
-
-    data.strip.style.transform =
-        `translate3d(0, ${-data.position * 80}px, 0)`;
-}
-
-function spinReel(index) {
-    const data = reelData[index];
-
-    if (stopped[index]) {
-        return;
-    }
-
-    const settings = betSettings[bet];
-
-    const speed = 80 / settings.speed * 16.67;
-
-    data.position += speed;
-
-    if (data.position >= SYMBOL_COUNT * 2) {
-        data.position -= SYMBOL_COUNT;
-    }
-
-    updateReel(index);
-
-    animationFrames[index] =
-        requestAnimationFrame(() => spinReel(index));
-}
-
-function stopReel(index) {
-    if (!spinning || stopped[index]) {
-        return;
-    }
-
-    stopped[index] = true;
-
-    if (animationFrames[index]) {
-        cancelAnimationFrame(animationFrames[index]);
-        animationFrames[index] = null;
-    }
-
-    const data = reelData[index];
-
-    const nearest =
-        Math.round(data.position);
-
-    data.position = nearest;
-
-    data.strip.style.transition =
-        "transform 0.22s cubic-bezier(.2,.8,.2,1)";
-
-    updateReel(index);
-
-    setTimeout(() => {
-        data.strip.style.transition = "";
-
-        if (stopped.every(value => value)) {
-            finishSpin();
-        }
-    }, 230);
-}
-
-function playSound(type) {
+function playSound(
+    frequency,
+    duration,
+    type = "square"
+) {
     if (!audioContext) {
         audioContext =
-            new (window.AudioContext ||
-            window.webkitAudioContext)();
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
     }
+
+    audioContext.resume();
 
     const oscillator =
         audioContext.createOscillator();
@@ -226,63 +117,394 @@ function playSound(type) {
     const gain =
         audioContext.createGain();
 
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
+    oscillator.frequency.value =
+        frequency;
 
-    if (type === "spin") {
-        oscillator.frequency.value = 180;
-        gain.gain.value = 0.04;
-    }
+    oscillator.type = type;
 
-    if (type === "stop") {
-        oscillator.frequency.value = 320;
-        gain.gain.value = 0.08;
-    }
-
-    if (type === "win") {
-        oscillator.frequency.value = 700;
-        gain.gain.value = 0.12;
-    }
-
-    if (type === "bonus") {
-        oscillator.frequency.value = 1000;
-        gain.gain.value = 0.15;
-    }
-
-    oscillator.type = "square";
-
-    oscillator.start();
+    gain.gain.setValueAtTime(
+        0.08,
+        audioContext.currentTime
+    );
 
     gain.gain.exponentialRampToValueAtTime(
         0.001,
-        audioContext.currentTime + 0.18
+        audioContext.currentTime + duration
     );
 
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start();
+
     oscillator.stop(
-        audioContext.currentTime + 0.18
+        audioContext.currentTime +
+        duration
     );
 }
 
-function applyBetEffect() {
-    const settings = betSettings[bet];
+function playWinSound() {
+    if (!audioContext) {
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+    }
 
-    reels.classList.remove(
-        "bet-glow",
-        "bet-shake",
-        "bet-flash"
+    audioContext.resume();
+
+    const notes = [
+        523,
+        659,
+        784,
+        1046
+    ];
+
+    notes.forEach(
+        (frequency, index) => {
+            setTimeout(() => {
+                playSound(
+                    frequency,
+                    0.18,
+                    "square"
+                );
+            }, index * 90);
+        }
+    );
+}
+
+function shuffleCopy(array) {
+    return [...array];
+}
+
+function createReels() {
+    reels.innerHTML = "";
+
+    for (
+        let column = 0;
+        column < 3;
+        column++
+    ) {
+        const reel =
+            document.createElement("div");
+
+        reel.className = "reel";
+
+        const track =
+            document.createElement("div");
+
+        track.className = "reel-track";
+
+        const fixedSymbols =
+            shuffleCopy(
+                reelSymbols[column]
+            );
+
+        for (
+            let repeat = 0;
+            repeat < 3;
+            repeat++
+        ) {
+            fixedSymbols.forEach(
+                symbolText => {
+                    const symbol =
+                        document.createElement(
+                            "div"
+                        );
+
+                    symbol.className =
+                        "symbol";
+
+                    symbol.textContent =
+                        symbolText;
+
+                    track.appendChild(
+                        symbol
+                    );
+                }
+            );
+        }
+
+        reel.appendChild(track);
+        reels.appendChild(reel);
+    }
+
+    requestAnimationFrame(() => {
+        document
+            .querySelectorAll(".reel")
+            .forEach(reel => {
+                const symbolHeight =
+                    reel.clientHeight / 3;
+
+                reel
+                    .querySelectorAll(".symbol")
+                    .forEach(symbol => {
+                        symbol.style.height =
+                            `${symbolHeight}px`;
+
+                        symbol.style.minHeight =
+                            `${symbolHeight}px`;
+                    });
+            });
+    });
+}
+
+function setupReels() {
+    reelData = [];
+
+    const reelElements =
+        document.querySelectorAll(".reel");
+
+    reelElements.forEach(
+        (reel, index) => {
+            const track =
+                reel.querySelector(
+                    ".reel-track"
+                );
+
+            const symbolHeight =
+                reel.clientHeight / 3;
+
+            const startIndex =
+                Math.floor(
+                    Math.random() *
+                    SYMBOL_COUNT
+                );
+
+            const startPosition =
+                startIndex *
+                symbolHeight;
+
+            reelData[index] = {
+                reel: reel,
+                track: track,
+                position: startPosition,
+                lastTime: null,
+                symbolHeight:
+                    symbolHeight
+            };
+
+            track.style.transition = "";
+
+            track.style.transform =
+                `translate3d(0, -${startPosition}px, 0)`;
+
+            track.style.filter =
+                "blur(0)";
+        }
+    );
+}
+
+function getCurrentSymbols(index) {
+    const data =
+        reelData[index];
+
+    const symbolsInTrack =
+        data.track.querySelectorAll(
+            ".symbol"
+        );
+
+    const currentIndex =
+        Math.round(
+            Math.abs(
+                data.position
+            ) /
+            data.symbolHeight
+        );
+
+    const topIndex =
+        currentIndex %
+        SYMBOL_COUNT;
+
+    const middleIndex =
+        (currentIndex + 1) %
+        SYMBOL_COUNT;
+
+    const bottomIndex =
+        (currentIndex + 2) %
+        SYMBOL_COUNT;
+
+    return [
+        symbolsInTrack[
+            topIndex
+        ].textContent,
+
+        symbolsInTrack[
+            middleIndex
+        ].textContent,
+
+        symbolsInTrack[
+            bottomIndex
+        ].textContent
+    ];
+}
+
+function spinReel(index) {
+    const data =
+        reelData[index];
+
+    data.lastTime = null;
+
+    animationFrames[index] =
+        requestAnimationFrame(
+            time => {
+                updateReel(
+                    index,
+                    time
+                );
+            }
+        );
+}
+
+function updateReel(
+    index,
+    timestamp
+) {
+    if (
+        !spinning ||
+        stopped[index]
+    ) {
+        return;
+    }
+
+    const data =
+        reelData[index];
+
+    if (
+        data.lastTime === null
+    ) {
+        data.lastTime =
+            timestamp;
+    }
+
+    const delta =
+        (
+            timestamp -
+            data.lastTime
+        ) / 1000;
+
+    data.lastTime =
+        timestamp;
+
+    data.position +=
+        SPIN_SPEED *
+        delta;
+
+    const loopDistance =
+        SYMBOL_COUNT *
+        data.symbolHeight;
+
+    if (
+        data.position >=
+        loopDistance
+    ) {
+        data.position -=
+            loopDistance;
+    }
+
+    data.track.style.transform =
+        `translate3d(0, -${data.position}px, 0)`;
+
+    data.track.style.filter =
+        "blur(2px)";
+
+    animationFrames[index] =
+        requestAnimationFrame(
+            time => {
+                updateReel(
+                    index,
+                    time
+                );
+            }
+        );
+}
+
+function stopReel(index) {
+    if (
+        !spinning ||
+        stopped[index]
+    ) {
+        return;
+    }
+
+    stopped[index] = true;
+
+    const button =
+        document.querySelector(
+            `.stop-button[data-index="${index}"]`
+        );
+
+    if (button) {
+        button.disabled = true;
+    }
+
+    const data =
+        reelData[index];
+
+    data.track.style.filter =
+        "blur(0)";
+
+    if (
+        animationFrames[index] !==
+        null
+    ) {
+        cancelAnimationFrame(
+            animationFrames[index]
+        );
+
+        animationFrames[index] =
+            null;
+    }
+
+    const snappedPosition =
+        Math.round(
+            data.position /
+            data.symbolHeight
+        ) *
+        data.symbolHeight;
+
+    const loopDistance =
+        SYMBOL_COUNT *
+        data.symbolHeight;
+
+    data.position =
+        snappedPosition %
+        loopDistance;
+
+    data.track.style.transition =
+        "transform 0.22s cubic-bezier(0.15, 0.75, 0.25, 1)";
+
+    data.track.style.transform =
+        `translate3d(0, -${data.position}px, 0)`;
+
+    playSound(
+        280 + index * 80,
+        0.1
     );
 
-    if (settings.glow) {
-        reels.classList.add("bet-glow");
-    }
+    setTimeout(() => {
+        data.track.style.transition =
+            "";
 
-    if (settings.shake) {
-        reels.classList.add("bet-shake");
-    }
+        data.reel.classList.add(
+            "stopped"
+        );
 
-    if (settings.flash) {
-        reels.classList.add("bet-flash");
-    }
+        setTimeout(() => {
+            data.reel.classList.remove(
+                "stopped"
+            );
+        }, 350);
+
+        if (
+            stopped.every(
+                value => value
+            )
+        ) {
+            finishSpin();
+        }
+    }, 230);
 }
 
 function spin() {
@@ -290,43 +512,59 @@ function spin() {
         return;
     }
 
-    if (coin < bet) {
-        message.textContent = "COINが足りません！";
-        return;
+    if (!audioContext) {
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
     }
 
-    spinning = true;
-    stopped = [false, false, false];
-    resultFinished = false;
+    audioContext.resume();
 
-    coin -= bet;
-
-    coinDisplay.textContent = coin;
-
-    message.textContent =
-        `BET ${bet}｜3つのSTOPで止めよう！`;
-
-    reels.classList.remove(
-        "success-shake",
-        "success-glow",
-        "flash"
+    playSound(
+        180,
+        0.15
     );
 
-    applyBetEffect();
+    spinning = true;
+    resultFinished = false;
 
-    playSound("spin");
+    spinButton.disabled = true;
 
-    for (let i = 0; i < 3; i++) {
-        reelData[i].strip.style.transition = "";
+    document
+        .querySelectorAll(".symbol")
+        .forEach(symbol => {
+            symbol.classList.remove(
+                "win"
+            );
+        });
 
-        const randomStart =
-            Math.floor(Math.random() * SYMBOL_COUNT);
+    message.textContent =
+        "STOPで止めよう！";
 
-        reelData[i].position =
-            SYMBOL_COUNT + randomStart;
+    stopped = [
+        false,
+        false,
+        false
+    ];
 
-        updateReel(i);
+    setupReels();
 
+    document
+        .querySelectorAll(
+            ".stop-button"
+        )
+        .forEach(button => {
+            button.disabled =
+                false;
+        });
+
+    for (
+        let i = 0;
+        i < 3;
+        i++
+    ) {
         spinReel(i);
     }
 }
@@ -337,170 +575,336 @@ function finishSpin() {
     }
 
     resultFinished = true;
+
+    const grid = [];
+
+    for (
+        let column = 0;
+        column < 3;
+        column++
+    ) {
+        grid[column] =
+            getCurrentSymbols(
+                column
+            );
+    }
+
+    checkResult(grid);
+
     spinning = false;
 
-    checkResult();
+    spinButton.disabled =
+        false;
+
+    document
+        .querySelectorAll(
+            ".stop-button"
+        )
+        .forEach(button => {
+            button.disabled =
+                false;
+        });
 }
 
-function checkResult() {
-    const symbols = getCurrentSymbols();
+function highlightLine(line) {
+    line.forEach(
+        ([column, row]) => {
+            const data =
+                reelData[column];
 
-    let totalScore = 0;
+            const symbolsInReel =
+                data.track.querySelectorAll(
+                    ".symbol"
+                );
+
+            const currentIndex =
+                Math.round(
+                    Math.abs(
+                        data.position
+                    ) /
+                    data.symbolHeight
+                ) %
+                SYMBOL_COUNT;
+
+            const actualIndex =
+                currentIndex + row;
+
+            const symbol =
+                symbolsInReel[
+                    actualIndex
+                ];
+
+            if (symbol) {
+                symbol.classList.add(
+                    "win"
+                );
+            }
+        }
+    );
+}
+
+function successEffect() {
+    const game =
+        document.querySelector(
+            ".game"
+        );
+
+    game.classList.remove(
+        "shake"
+    );
+
+    void game.offsetWidth;
+
+    game.classList.add(
+        "shake"
+    );
+
+    game.classList.remove(
+        "success-flash"
+    );
+
+    void game.offsetWidth;
+
+    game.classList.add(
+        "success-flash"
+    );
+
+    for (
+        let i = 0;
+        i < 35;
+        i++
+    ) {
+        const spark =
+            document.createElement(
+                "div"
+            );
+
+        spark.className =
+            "spark";
+
+        spark.style.left =
+            "50%";
+
+        spark.style.top =
+            "50%";
+
+        const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+        const distance =
+            100 +
+            Math.random() *
+            300;
+
+        spark.style.setProperty(
+            "--x",
+            `${Math.cos(angle) * distance}px`
+        );
+
+        spark.style.setProperty(
+            "--y",
+            `${Math.sin(angle) * distance}px`
+        );
+
+        document.body.appendChild(
+            spark
+        );
+
+        setTimeout(() => {
+            spark.remove();
+        }, 800);
+    }
+}
+
+function checkResult(grid) {
+    const scoreValues = {
+        "7️⃣": 500,
+        "BAR": 300,
+        "🔔": 200,
+        "🍉": 150,
+        "🍒": 100
+    };
+
+    const resultNames = {
+        "7️⃣": "大当たり！",
+        "BAR": "中当たり！",
+        "🔔": "小当たり！",
+        "🍉": "小当たり！",
+        "🍒": "当たり！"
+    };
+
+    const lines = [
+        [
+            [0, 0],
+            [1, 0],
+            [2, 0]
+        ],
+        [
+            [0, 1],
+            [1, 1],
+            [2, 1]
+        ],
+        [
+            [0, 2],
+            [1, 2],
+            [2, 2]
+        ],
+        [
+            [0, 0],
+            [1, 1],
+            [2, 2]
+        ],
+        [
+            [2, 0],
+            [1, 1],
+            [0, 2]
+        ]
+    ];
+
+    let baseScore = 0;
     let bonus = false;
-    let winningLines = [];
+    let resultText = "";
 
-    lines.forEach((line, index) => {
-        const values = line.map(position => {
-            const reelIndex = position % 3;
-            return symbols[reelIndex];
-        });
+    lines.forEach(line => {
+        const [a, b, c] =
+            line;
+
+        const symbolA =
+            grid[a[0]][a[1]];
+
+        const symbolB =
+            grid[b[0]][b[1]];
+
+        const symbolC =
+            grid[c[0]][c[1]];
 
         if (
-            values[0] === values[1] &&
-            values[1] === values[2]
+            symbolA === symbolB &&
+            symbolB === symbolC
         ) {
-            if (values[0] === "🍋") {
+            highlightLine(line);
+
+            if (
+                symbolA === "🍋"
+            ) {
                 bonus = true;
-                winningLines.push(index);
                 return;
             }
 
-            if (scoreValues[values[0]]) {
-                totalScore += scoreValues[values[0]];
-                winningLines.push(index);
+            if (
+                scoreValues[
+                    symbolA
+                ]
+            ) {
+                baseScore +=
+                    scoreValues[
+                        symbolA
+                    ];
+
+                resultText =
+                    resultNames[
+                        symbolA
+                    ];
             }
         }
     });
 
     if (bonus) {
-        const bonusScore = 50;
+        const bonusScore =
+            250;
 
-        score += bonusScore;
-        coin += bonusScore;
+        score +=
+            bonusScore;
 
-        scoreDisplay.textContent = score;
-        coinDisplay.textContent = coin;
+        coin +=
+            bonusScore;
+
+        scoreDisplay.textContent =
+            score;
+
+        coinDisplay.textContent =
+            coin;
 
         message.textContent =
-            "🍋 BONUS！ +50 SCORE";
+            `🍋 BONUS！ +${bonusScore} SCORE`;
 
-        playSound("bonus");
+        playWinSound();
 
-        successEffect(winningLines);
+        successEffect();
 
         return;
     }
 
-    if (totalScore > 0) {
-        score += totalScore;
-        coin += totalScore;
+    if (baseScore > 0) {
+        score +=
+            baseScore;
 
-        scoreDisplay.textContent = score;
-        coinDisplay.textContent = coin;
+        coin +=
+            baseScore;
+
+        scoreDisplay.textContent =
+            score;
+
+        coinDisplay.textContent =
+            coin;
 
         message.textContent =
-            `🎉 ${totalScore} SCORE GET！`;
+            `${resultText} +${baseScore} SCORE`;
 
-        playSound("win");
+        playWinSound();
 
-        successEffect(winningLines);
+        successEffect();
 
         return;
     }
 
-    message.textContent = "MISS...";
+    message.textContent =
+        "もう一度チャレンジ！";
 
-    playSound("stop");
-
-    reels.classList.remove(
-        "bet-glow",
-        "bet-shake",
-        "bet-flash"
+    playSound(
+        160,
+        0.12,
+        "triangle"
     );
 }
 
-function highlightLine(lineIndex) {
-    const line = lines[lineIndex];
-
-    line.forEach(position => {
-        const reelIndex = position % 3;
-
-        const reel = reelData[reelIndex].reel;
-
-        reel.classList.add("winning");
-
-        setTimeout(() => {
-            reel.classList.remove("winning");
-        }, 700);
-    });
+function toggleInfo() {
+    infoPanel.classList.toggle(
+        "show"
+    );
 }
-
-function successEffect(winningLines) {
-    reels.classList.add("success-shake");
-    reels.classList.add("success-glow");
-
-    const settings = betSettings[bet];
-
-    if (settings.flash) {
-        reels.classList.add("flash");
-    }
-
-    winningLines.forEach((lineIndex, i) => {
-        setTimeout(() => {
-            highlightLine(lineIndex);
-        }, i * 120);
-    });
-
-    setTimeout(() => {
-        reels.classList.remove(
-            "success-shake",
-            "success-glow",
-            "flash",
-            "bet-glow",
-            "bet-shake",
-            "bet-flash"
-        );
-    }, 900);
-}
-
-betDisplay.addEventListener("click", () => {
-    if (spinning) {
-        return;
-    }
-
-    const values = [10, 20, 30, 40, 50];
-
-    const currentIndex =
-        values.indexOf(bet);
-
-    const nextIndex =
-        (currentIndex + 1) % values.length;
-
-    bet = values[nextIndex];
-
-    betValue.textContent = bet;
-
-    message.textContent =
-        `BET ${bet}｜${betSettings[bet].speed}ms`;
-});
-
-spinButton.addEventListener("click", spin);
-
-document.querySelectorAll(".stop-button").forEach(button => {
-    button.addEventListener("click", () => {
-        const index =
-            Number(button.dataset.index);
-
-        stopReel(index);
-
-        if (spinning) {
-            playSound("stop");
-        }
-    });
-});
-
-infoButton.addEventListener("click", () => {
-    infoPanel.classList.toggle("show");
-});
 
 createReels();
+
+spinButton.disabled =
+    false;
+
+spinButton.addEventListener(
+    "click",
+    spin
+);
+
+document
+    .querySelectorAll(
+        ".stop-button"
+    )
+    .forEach(button => {
+        button.addEventListener(
+            "click",
+            () => {
+                const index =
+                    Number(
+                        button.dataset.index
+                    );
+
+                stopReel(index);
+            }
+        );
+    });
+
+infoButton.addEventListener(
+    "click",
+    toggleInfo
+);
